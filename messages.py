@@ -50,7 +50,7 @@ class BaseMessage(object):
     def encode_for_writing(self):
         val = b''
 
-        msg_num = self.message_number().to_bytes(3, byteorder='big')
+        msg_num = (self.message_number() if self.message_number() is not None else 0).to_bytes(3, byteorder='big')
         type = self.message_type().to_bytes(3, byteorder='big')
         data = self.prepare_data()
         crc = crc8.calc(msg_num+type+data).to_bytes(1, byteorder='big')
