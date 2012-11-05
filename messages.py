@@ -187,3 +187,10 @@ class ProxyMessage(BaseMessage):
 
     def __str__(self):
         return self._pretty_print(self.inner_message)
+
+class NopMessage(BaseMessage):
+    def __init__(self):
+        super().__init__(MESSAGE_TYPES.MSG_NOP)
+
+    def prepare_data(self):
+        return b''
