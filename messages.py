@@ -58,6 +58,9 @@ class BaseMessage(object):
         val+= STX+STX+self.escape_bytes(msg_num)+self.escape_bytes(type)+self.escape_bytes(data)+self.escape_bytes(crc)+ETB
         return val
 
+    def encoded_message_length(self):
+        return len(self.encode_for_writing())
+
     @classmethod
     def from_raw_data(cls, data):
         """
