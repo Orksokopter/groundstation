@@ -75,7 +75,7 @@ class BaseMessage(object):
         if type == MESSAGE_TYPES.MSG_PONG:
             msg = PongMessage.from_raw_data(data[3:-1])
         elif type == MESSAGE_TYPES.MSG_CLEAR_TO_SEND:
-            msg = ClearToSendMessage()
+            msg = ClearToSendMessage.from_raw_data(data[3:-1])
         else:
             raise UnknownMessageType()
 
@@ -145,9 +145,19 @@ class PongMessage(BaseMessage):
 class ClearToSendMessage(BaseMessage):
     def __init__(self):
         super().__init__(MESSAGE_TYPES.MSG_CLEAR_TO_SEND)
+        self.last_message_number = None
+        self.previous_last_message_number = None
 
     def __str__(self):
-        return self._pretty_print()
+        return self._pretty_print("Last Message Number: {}, Previous Last Message Number: {}".format(self.last_message_number, self.previous_last_message_number))
+
+    @classmethod
+    def from_raw_data(cls, data):
+        msg = ClearToSendMessage()
+        msg.last_message_number = int.from_bytes(data[0:3], byteorder='big')
+        msg.previous_last_message_number = int.from_bytes(data[3:3], byteorder='big')
+
+        return msg
 
 class ProxyMessage(BaseMessage):
     def __init__(self, inner_message = None):
