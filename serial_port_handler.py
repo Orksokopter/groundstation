@@ -3,7 +3,7 @@ import logging
 from threading import Thread, Lock, Condition
 import serial
 import sys
-from messages import PingMessage, STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ProxyMessage, ClearToSendMessage
+from messages import PingMessage, STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ProxyMessage, ClearToSendMessage, NopMessage
 from queue import Queue
 import settings
 
@@ -69,9 +69,9 @@ class SerialWrite(Thread):
         Thread.__init__(self)
         self.serial_port = serial_port
         self.queue = queue
-        self.current_message_number = 0
+        self.current_message_number = 1
         self.last_cleared_message_number = None
-        self.remaining_send_buffer = self.MAX_SERIAL_SEND_BUFFER
+        self.remaining_send_buffer = 0
 
         self.reset_send_buffer_lock = Lock()
         self.full_buffer_wait_condition = Condition(self.reset_send_buffer_lock)
@@ -94,9 +94,12 @@ class SerialWrite(Thread):
             msg = self.queue.get()
 
             with self.reset_send_buffer_lock:
-                if msg.encoded_message_length() > self.remaining_send_buffer:
+                while msg.encoded_message_length() > self.remaining_send_buffer:
                     logger.info('Send buffer full... waiting for ClearToSend')
-                    self.full_buffer_wait_condition.wait()
+                    if not self.full_buffer_wait_condition.wait(1):
+                        tmp = NopMessage()
+                        tmp.set_message_number(self.current_message_number)
+                        self.serial_port.write(tmp.encode_for_writing())
 
                 self.current_message_number+= 1
                 msg.set_message_number(self.current_message_number)
