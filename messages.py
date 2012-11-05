@@ -128,3 +128,26 @@ class PongMessage(BaseMessage):
 class ClearToSendMessage(BaseMessage):
     def __init__(self):
         super().__init__(MESSAGE_TYPES.MSG_CLEAR_TO_SEND)
+
+class ProxyMessage(BaseMessage):
+    def __init__(self, inner_message = None):
+        """
+        @type inner_message: BaseMessage
+        """
+        super().__init__(MESSAGE_TYPES.MSG_PROXY_MESSAGE)
+        self.inner_message = inner_message
+
+    def set_inner_message(self, msg):
+        """
+        @type msg: BaseMessage
+        """
+        self.inner_message = msg
+
+    def prepare_data(self):
+        tmp = self.inner_message.message_type().to_bytes(3, byteorder='big')
+        tmp+= self.inner_message.prepare_data()
+
+        return len(tmp).to_bytes(2, byteorder='big')+tmp
+
+    def __str__(self):
+        return 'ProxyMessage: {}'.format(self.inner_message)
