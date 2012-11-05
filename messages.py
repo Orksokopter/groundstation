@@ -148,17 +148,20 @@ class PongMessage(BaseMessage):
 class ClearToSendMessage(BaseMessage):
     def __init__(self):
         super().__init__(MESSAGE_TYPES.MSG_CLEAR_TO_SEND)
-        self.last_message_number = None
-        self.previous_last_message_number = None
+        self.__last_message_number = None
+        self.__previous_last_message_number = None
+
+    def last_message_number(self):
+        return self.__last_message_number
 
     def __str__(self):
-        return self._pretty_print("Last Message Number: {}, Previous Last Message Number: {}".format(self.last_message_number, self.previous_last_message_number))
+        return self._pretty_print("Last Message Number: {}, Previous Last Message Number: {}".format(self.__last_message_number, self.__previous_last_message_number))
 
     @classmethod
     def from_raw_data(cls, data):
         msg = ClearToSendMessage()
-        msg.last_message_number = int.from_bytes(data[0:3], byteorder='big')
-        msg.previous_last_message_number = int.from_bytes(data[3:3], byteorder='big')
+        msg.__last_message_number = int.from_bytes(data[0:3], byteorder='big')
+        msg.__previous_last_message_number = int.from_bytes(data[3:3], byteorder='big')
 
         return msg
 
