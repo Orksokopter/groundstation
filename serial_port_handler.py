@@ -50,7 +50,7 @@ class SerialRead(Thread):
                     logger.debug("< {}".format(msg))
 
                     if isinstance(msg, ClearToSendMessage):
-                        self.writer.reset_remaining_send_buffer()
+                        self.writer.reset_remaining_send_buffer(msg.last_message_number())
 
                 except MessageCRCError as e:
                     logger.error('Message CRC mismatch... transmitted CRC: {}, computed CRC: {}'.format(e.transmitted_crc, e.computed_crc))
@@ -71,39 +71,39 @@ class SerialWrite(Thread):
         self.queue = queue
         self.current_message_number = 0
         self.last_cleared_message_number = None
-        self.remaining_send_buffer = 0
+        self.remaining_send_buffer = self.MAX_SERIAL_SEND_BUFFER
 
         self.reset_send_buffer_lock = Lock()
         self.full_buffer_wait_condition = Condition(self.reset_send_buffer_lock)
 
-        self.reset_remaining_send_buffer()
-
-    def reset_remaining_send_buffer(self):
-        logging.debug('Clearing remaining send buffer...')
-        self.reset_send_buffer_lock.acquire()
-        self.remaining_send_buffer = self.MAX_SERIAL_SEND_BUFFER
-        try:
-            self.full_buffer_wait_condition.notify()
-        except RuntimeError:
-            pass
-        self.reset_send_buffer_lock.release()
+    def reset_remaining_send_buffer(self, cts_last_message_number):
+        with self.reset_send_buffer_lock:
+            if cts_last_message_number < self.current_message_number:
+                logging.debug("Not clearing buffer since msg num {} is lower than current msg num {}".format(cts_last_message_number, self.current_message_number))
+                return
+            logging.debug('Clearing remaining send buffer...')
+            self.remaining_send_buffer = self.MAX_SERIAL_SEND_BUFFER
+            try:
+                self.full_buffer_wait_condition.notify()
+            except RuntimeError:
+                pass
 
     def run(self):
         logger = logging.getLogger()
         while True:
             msg = self.queue.get()
 
-            self.current_message_number+= 1
-            msg.set_message_number(self.current_message_number)
-
-            logger.debug("> {}...".format(msg))
-
-            encoded_message = msg.encode_for_writing()
-
             with self.reset_send_buffer_lock:
-                if len(encoded_message) > self.remaining_send_buffer:
+                if msg.encoded_message_length() > self.remaining_send_buffer:
                     logger.info('Send buffer full... waiting for ClearToSend')
                     self.full_buffer_wait_condition.wait()
+
+                self.current_message_number+= 1
+                msg.set_message_number(self.current_message_number)
+
+                logger.debug("> {}...".format(msg))
+
+                encoded_message = msg.encode_for_writing()
 
                 self.remaining_send_buffer-= len(encoded_message)
                 self.serial_port.write(encoded_message)
