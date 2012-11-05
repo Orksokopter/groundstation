@@ -112,16 +112,24 @@ class SerialWrite(Thread):
                 self.serial_port.write(encoded_message)
                 self.serial_port.flush()
 
-ser = serial.Serial(3, 57600)
 
-writer_queue = Queue()
-sr = SerialRead(ser)
-sw = SerialWrite(ser, writer_queue)
-sr.connect_to_writer(sw)
+if __name__ == "__main__":
+    ser = serial.Serial(3, 57600)
 
-sr.start()
-sw.start()
+    writer_queue = Queue()
+    sr = SerialRead(ser)
+    sw = SerialWrite(ser, writer_queue)
+    sr.connect_to_writer(sw)
 
-for i in range(1000):
-    writer_queue.put(PingMessage())
-    writer_queue.put(ProxyMessage(PingMessage()))
+    sr.start()
+    sw.start()
+
+    #logging.info("Press Enter to send a ping")
+
+    #while input() is not None:
+    #    writer_queue.put(PingMessage())
+    #    #writer_queue.put(ProxyMessage(PingMessage()))
+
+    for i in range(100):
+        writer_queue.put(PingMessage())
+        writer_queue.put(ProxyMessage(PingMessage()))
