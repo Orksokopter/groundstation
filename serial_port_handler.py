@@ -97,9 +97,10 @@ class SerialWrite(Thread):
                 while msg.encoded_message_length() > self.remaining_send_buffer:
                     logger.info('Send buffer full... waiting for ClearToSend')
                     if not self.full_buffer_wait_condition.wait(1):
-                        tmp = NopMessage()
-                        tmp.set_message_number(self.current_message_number)
-                        self.serial_port.write(tmp.encode_for_writing())
+                        nop = NopMessage()
+                        nop.set_message_number(self.current_message_number)
+                        self.serial_port.write(nop.encode_for_writing())
+                        logger.debug('> {}'.format(nop))
 
                 self.current_message_number+= 1
                 msg.set_message_number(self.current_message_number)
