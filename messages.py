@@ -36,18 +36,26 @@ class MESSAGE_TYPES:
 class BaseMessage(object):
     def __init__(self, message_type):
         self.__message_type = message_type
+        self.__message_number = None
 
     def message_type(self):
         return self.__message_type
 
+    def message_number(self):
+        return self.__message_number
+
+    def set_message_number(self, msg_num):
+        self.__message_number = msg_num
+
     def encode_for_writing(self):
         val = b''
 
+        msg_num = self.message_number().to_bytes(3, byteorder='big')
         type = self.message_type().to_bytes(3, byteorder='big')
         data = self.prepare_data()
-        crc = crc8.calc(type+data).to_bytes(1, byteorder='big')
+        crc = crc8.calc(msg_num+type+data).to_bytes(1, byteorder='big')
 
-        val+= STX+STX+self.escape_bytes(type)+self.escape_bytes(data)+self.escape_bytes(crc)+ETB
+        val+= STX+STX+self.escape_bytes(msg_num)+self.escape_bytes(type)+self.escape_bytes(data)+self.escape_bytes(crc)+ETB
         return val
 
     @classmethod
@@ -86,6 +94,15 @@ class BaseMessage(object):
     def __str__(self):
         return self.__class__.__name__
 
+    def _pretty_print(self, stuff=None):
+        format_str = "{type}" if self.message_number() is None else "[{msg_num:0>8}] {type}"
+        base = format_str.format(msg_num = self.message_number(), type = self.__class__.__name__)
+
+        if stuff is not None:
+            return '{} ({})'.format(base, stuff)
+
+        return base
+
 class PingMessage(BaseMessage):
     sequence_number = 0
 
@@ -95,7 +112,7 @@ class PingMessage(BaseMessage):
         self.sequence_number = PingMessage.sequence_number
 
     def __str__(self):
-        return 'PingMessage (Sequence number: {})'.format(self.sequence_number)
+        return self._pretty_print('Sequence number: {}'.format(self.sequence_number))
 
     def prepare_data(self):
         return self.sequence_number.to_bytes(2, byteorder="big")
@@ -113,7 +130,7 @@ class PongMessage(BaseMessage):
         self.sequence_number = None
 
     def __str__(self):
-        return 'PongMessage (Sequence number: {})'.format(self.sequence_number)
+        return self._pretty_print('Sequence number: {}'.format(self.sequence_number))
 
     def prepare_data(self):
         return self.sequence_number.to_bytes(2, byteorder="big")
@@ -128,6 +145,9 @@ class PongMessage(BaseMessage):
 class ClearToSendMessage(BaseMessage):
     def __init__(self):
         super().__init__(MESSAGE_TYPES.MSG_CLEAR_TO_SEND)
+
+    def __str__(self):
+        return self._pretty_print()
 
 class ProxyMessage(BaseMessage):
     def __init__(self, inner_message = None):
@@ -150,4 +170,4 @@ class ProxyMessage(BaseMessage):
         return len(tmp).to_bytes(2, byteorder='big')+tmp
 
     def __str__(self):
-        return 'ProxyMessage: {}'.format(self.inner_message)
+        return self._pretty_print(self.inner_message)

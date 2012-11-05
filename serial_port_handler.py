@@ -56,11 +56,15 @@ class SerialWrite(Thread):
         Thread.__init__(self)
         self.serial_port = serial_port
         self.queue = queue
+        self.current_message_number = 0
 
     def run(self):
         logger = logging.getLogger()
         while True:
             msg = self.queue.get()
+
+            self.current_message_number+= 1
+            msg.set_message_number(self.current_message_number)
 
             logger.debug("> {}...".format(msg))
             self.serial_port.write(msg.encode_for_writing())
