@@ -95,7 +95,7 @@ class BaseMessage(object):
         return bytes.replace(ESC, ESC+ESC).replace(STX, ESC+STX).replace(ETB, ESC+ETB)
 
     def __str__(self):
-        return self.__class__.__name__
+        return self._pretty_print()
 
     def _pretty_print(self, stuff=None):
         format_str = "{type}" if self.message_number() is None else "[{msg_num:0>8}] {type}"
