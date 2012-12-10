@@ -8,6 +8,8 @@ class MessageCRCError(Exception):
         self.computed_crc = computed_crc
 class UnknownMessageType(Exception):
     pass
+class EmptyMessageError(Exception):
+    pass
 
 ESC = b"\x1B"
 STX = b"\x01"
@@ -67,6 +69,9 @@ class BaseMessage(object):
         @param data: Bla
         @type data: bytes
         """
+        if not data:
+            raise EmptyMessageError()
+
         transmitted_crc = data[-1]
         computed_crc = crc8.calc(data[0:-1])
 

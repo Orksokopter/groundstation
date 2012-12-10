@@ -45,6 +45,10 @@ class SerialRead(Thread):
                     state = "in_message"
 
             if state == "after_message":
+                if not buffer:
+                    logger.warning('Received empty message, skipping!')
+                    continue
+
                 try:
                     msg = BaseMessage.from_raw_data(buffer)
                     logger.debug("< {}".format(msg))
