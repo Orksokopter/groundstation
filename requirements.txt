@@ -1,0 +1,2 @@
+pyserial-py3k==2.6
+pywin32==218
