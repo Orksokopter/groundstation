@@ -1,3 +1,5 @@
+import doctest
+
 CRC_TABLE = (
     0x00,0x07,0x0E,0x09,
     0x1C,0x1B,0x12,0x15,
@@ -66,6 +68,17 @@ CRC_TABLE = (
 )
 
 def calc(data):
+    """
+    Calculates a CRC8 checksum according to our hardcoded CRC_TABLE
+
+    >>> calc(b'abc')
+    95
+    >>> calc(b'XYZ')
+    69
+
+    @param data:
+    @return:
+    """
     checksum = 0
 
     for curr_byte in data:
@@ -74,3 +87,6 @@ def calc(data):
     checksum&= 0xFF
 
     return checksum
+
+if __name__ == "__main__":
+    doctest.testmod()
