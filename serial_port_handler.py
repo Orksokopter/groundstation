@@ -4,9 +4,10 @@ from threading import Lock, Condition
 import serial
 import sys
 from messages import PingMessage, STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ProxyMessage, ClearToSendMessage, NopMessage
-from queue import Queue
+from queue import Queue, Empty
 import settings
 from PyQt4 import QtCore
+from tools.getch import getch
 
 settings.init_logging()
 
@@ -18,6 +19,7 @@ class SerialRead(QtCore.QThread):
         QtCore.QThread.__init__(self)
         self.serial_port = serial_port
         self.writer = None
+        self.__abort = False
 
     def connect_to_writer(self, writer):
         """
@@ -25,12 +27,18 @@ class SerialRead(QtCore.QThread):
         """
         self.writer = writer
 
+    def abort(self):
+        self.__abort = True
+
     def run(self):
         logger = logging.getLogger()
         buffer = b""
         state = "inactive"
-        while True:
+        while not self.__abort:
             curr_char = ser.read()
+
+            if not curr_char:
+                continue
 
             if state != "after_escape" and curr_char == STX:
                 buffer = b""
@@ -77,6 +85,7 @@ class SerialWrite(QtCore.QThread):
         self.current_message_number = 1
         self.last_cleared_message_number = None
         self.remaining_send_buffer = 0
+        self.__abort = False
 
         self.reset_send_buffer_lock = Lock()
         self.full_buffer_wait_condition = Condition(self.reset_send_buffer_lock)
@@ -93,19 +102,29 @@ class SerialWrite(QtCore.QThread):
             except RuntimeError:
                 pass
 
+    def abort(self):
+        self.__abort = True
+
     def run(self):
         logger = logging.getLogger()
-        while True:
-            msg = self.queue.get()
+        while not self.__abort:
+            try:
+                msg = self.queue.get(1)
+            except Empty:
+                continue
 
             with self.reset_send_buffer_lock:
-                while msg.encoded_message_length() > self.remaining_send_buffer:
+                while not self.__abort and msg.encoded_message_length() > self.remaining_send_buffer:
                     logger.debug('Send buffer full... waiting for ClearToSend')
                     if not self.full_buffer_wait_condition.wait(1):
                         nop = NopMessage()
                         nop.set_message_number(self.current_message_number)
                         self.serial_port.write(nop.encode_for_writing())
                         logger.debug('> {}'.format(nop))
+
+                # This thread may have been told to abort while waiting on the send buffer
+                if self.__abort:
+                    continue
 
                 self.current_message_number+= 1
                 msg.set_message_number(self.current_message_number)
@@ -123,6 +142,7 @@ if __name__ == "__main__":
     app = QtCore.QCoreApplication(sys.argv)
 
     ser = serial.Serial(3, 57600)
+    ser.timeout = 1 # This needs to be set so the threads may have a chance to abort
 
     writer_queue = Queue()
     sr = SerialRead(ser)
@@ -141,6 +161,18 @@ if __name__ == "__main__":
     for i in range(100):
         writer_queue.put(PingMessage())
         writer_queue.put(ProxyMessage(PingMessage()))
+
+    print("")
+    print("")
+    print("(STRG+c) or (q) to quit")
+    print("")
+
+    char = None
+    while char is not b"\x03" and char is not b"q":
+        char = getch()
+
+    sr.abort()
+    sw.abort()
 
     sr.wait()
     sw.wait()
