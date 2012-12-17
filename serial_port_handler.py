@@ -109,7 +109,7 @@ class SerialWrite(QtCore.QThread):
         logger = logging.getLogger()
         while not self.__abort:
             try:
-                msg = self.queue.get(1)
+                msg = self.queue.get(timeout=1)
             except Empty:
                 continue
 
