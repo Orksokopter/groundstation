@@ -1,20 +1,21 @@
 import binascii
 import logging
-from threading import Thread, Lock, Condition
+from threading import Lock, Condition
 import serial
 import sys
 from messages import PingMessage, STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ProxyMessage, ClearToSendMessage, NopMessage
 from queue import Queue
 import settings
+from PyQt4 import QtCore
 
 settings.init_logging()
 
-class SerialRead(Thread):
+class SerialRead(QtCore.QThread):
     def __init__(self, serial_port):
         """
         @type serial_port: serial.Serial
         """
-        Thread.__init__(self)
+        QtCore.QThread.__init__(self)
         self.serial_port = serial_port
         self.writer = None
 
@@ -62,7 +63,7 @@ class SerialRead(Thread):
                     logger.warn('Unknown message {}'.format(binascii.hexlify(buffer)))
                 buffer = b""
 
-class SerialWrite(Thread):
+class SerialWrite(QtCore.QThread):
     MAX_SERIAL_SEND_BUFFER = 128
 
     def __init__(self, serial_port, queue):
@@ -70,7 +71,7 @@ class SerialWrite(Thread):
         @type serial_port: serial.Serial
         @type queue: queue.Queue
         """
-        Thread.__init__(self)
+        QtCore.QThread.__init__(self)
         self.serial_port = serial_port
         self.queue = queue
         self.current_message_number = 1
@@ -119,6 +120,8 @@ class SerialWrite(Thread):
 
 
 if __name__ == "__main__":
+    app = QtCore.QCoreApplication(sys.argv)
+
     ser = serial.Serial(3, 57600)
 
     writer_queue = Queue()
@@ -138,3 +141,6 @@ if __name__ == "__main__":
     for i in range(100):
         writer_queue.put(PingMessage())
         writer_queue.put(ProxyMessage(PingMessage()))
+
+    sr.wait()
+    sw.wait()
