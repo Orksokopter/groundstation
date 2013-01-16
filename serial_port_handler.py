@@ -3,7 +3,7 @@ import logging
 from threading import Lock, Condition
 import serial
 import sys
-from messages import PingMessage, STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ProxyMessage, ClearToSendMessage, NopMessage
+from messages import STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ClearToSendMessage, NopMessage
 from queue import Queue, Empty
 import settings
 from PyQt4 import QtCore
@@ -139,6 +139,7 @@ class SerialWrite(QtCore.QThread):
 
 
 if __name__ == "__main__":
+    from messages import PingMessage, ProxyMessage
     app = QtCore.QCoreApplication(sys.argv)
 
     ser = serial.Serial(3, 57600)
