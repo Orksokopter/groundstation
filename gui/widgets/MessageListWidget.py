@@ -1,6 +1,5 @@
 from datetime import datetime
 from PyQt4 import QtGui
-from PyQt4.QtSvg import *
 
 import gui.resources_rc
 
