@@ -35,7 +35,7 @@ class SerialRead(QtCore.QThread):
         buffer = b""
         state = "inactive"
         while not self.__abort:
-            curr_char = ser.read()
+            curr_char = self.serial_port.read()
 
             if not curr_char:
                 continue
