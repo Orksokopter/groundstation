@@ -1,3 +1,14 @@
+"""serial_port_handler
+
+Usage:
+  serial_port_handler <device>
+  serial_port_handler -h | --help
+
+Options:
+  -h --help     Show this screen.
+
+"""
+from docopt import docopt
 import binascii
 import logging
 from threading import Lock, Condition
@@ -148,10 +159,12 @@ class SerialWrite(QtCore.QThread):
                 self.sent_message.emit(msg)
 
 if __name__ == "__main__":
+    arguments = docopt(__doc__, version='serial_port_handler')
+
     from messages import PingMessage, ProxyMessage
     app = QtCore.QCoreApplication(sys.argv)
 
-    ser = serial.Serial(3, 57600)
+    ser = serial.Serial(arguments['<device>'], 57600)
     ser.timeout = 1 # This needs to be set so the threads may have a chance to abort
 
     writer_queue = Queue()
