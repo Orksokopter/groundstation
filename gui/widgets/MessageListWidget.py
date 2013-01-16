@@ -22,9 +22,9 @@ class MessageListWidget(QtGui.QListWidget):
                 scroll_down = True
 
         if direction == 'in':
-            icon = QtGui.QIcon(QtGui.QPixmap(':/icons/arrow-left'))
+            icon = QtGui.QIcon(':/icons/arrow-left')
         else:
-            icon = QtGui.QIcon(QtGui.QPixmap(':/icons/arrow-right'))
+            icon = QtGui.QIcon(':/icons/arrow-right')
 
         self.addItem(QtGui.QListWidgetItem(icon, "{}: {}".format(datetime.now().isoformat(), msg)))
 
