@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="arrow-left">resources/arrow-left.svgz</file>
+        <file alias="arrow-right">resources/arrow-right.svgz</file>
+        <file alias="app-icon">resources/app.png</file>
+    </qresource>
+</RCC>

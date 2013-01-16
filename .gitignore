@@ -1,4 +1,4 @@
 /.idea
 /__pycache__
-/tools/__pycache__
+__pycache__
 /build
