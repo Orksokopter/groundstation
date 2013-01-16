@@ -8,6 +8,9 @@ class SerialPortDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         QtGui.QDialog.__init__(self, parent)
 
+        self.setWindowTitle('Seriellen Port wählen')
+        self.setWindowIcon(QtGui.QIcon(':/icons/glyph-router'))
+
         label = QtGui.QLabel("Port wählen:")
 
         self.serialport_combobox = QtGui.QComboBox()
