@@ -1,6 +1,7 @@
 import binascii
 import logging
 from threading import Lock, Condition
+from PyQt4.QtCore import pyqtSignal
 import serial
 import sys
 from messages import STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ClearToSendMessage, NopMessage
@@ -12,6 +13,8 @@ from tools.getch import getch
 settings.init_logging()
 
 class SerialRead(QtCore.QThread):
+    received_message = pyqtSignal(BaseMessage)
+
     def __init__(self, serial_port):
         """
         @type serial_port: serial.Serial
@@ -62,6 +65,8 @@ class SerialRead(QtCore.QThread):
                     msg = BaseMessage.from_raw_data(buffer)
                     logger.debug("< {}".format(msg))
 
+                    self.received_message.emit(msg)
+
                     if isinstance(msg, ClearToSendMessage):
                         self.writer.reset_remaining_send_buffer(msg.last_message_number())
 
@@ -73,6 +78,8 @@ class SerialRead(QtCore.QThread):
 
 class SerialWrite(QtCore.QThread):
     MAX_SERIAL_SEND_BUFFER = 128
+
+    sent_message = pyqtSignal(BaseMessage)
 
     def __init__(self, serial_port, queue):
         """
@@ -120,6 +127,7 @@ class SerialWrite(QtCore.QThread):
                         nop = NopMessage()
                         nop.set_message_number(self.current_message_number)
                         self.serial_port.write(nop.encode_for_writing())
+                        self.sent_message.emit(nop)
                         logger.debug('> {}'.format(nop))
 
                 # This thread may have been told to abort while waiting on the send buffer
@@ -137,6 +145,7 @@ class SerialWrite(QtCore.QThread):
                 self.serial_port.write(encoded_message)
                 self.serial_port.flush()
 
+                self.sent_message.emit(msg)
 
 if __name__ == "__main__":
     from messages import PingMessage, ProxyMessage
