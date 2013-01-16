@@ -1,5 +1,6 @@
 import abc
 import sys
+import binascii
 from tools import crc8
 
 class MessageCRCError(Exception):
@@ -166,7 +167,7 @@ class ClearToSendMessage(BaseMessage):
     def from_raw_data(cls, data):
         msg = ClearToSendMessage()
         msg.__last_message_number = int.from_bytes(data[0:3], byteorder='big')
-        msg.__previous_last_message_number = int.from_bytes(data[3:3], byteorder='big')
+        msg.__previous_last_message_number = int.from_bytes(data[3:6], byteorder='big')
 
         return msg
 
