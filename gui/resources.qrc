@@ -4,5 +4,6 @@
         <file alias="arrow-right">resources/arrow-right.svgz</file>
         <file alias="glyph-router">resources/glyph-router.png</file>
         <file alias="app-icon">resources/app.png</file>
+        <file alias="pong">resources/Pong-160028.png</file>
     </qresource>
 </RCC>

@@ -7,7 +7,7 @@ from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QVBoxLayout
 import serial
 from gui.serial_port_dialog import SerialPortDialog
-from gui.widgets.MessageListWidget import MessageListWidget
+from gui.widgets import PingPongWidget, MessageListWidget
 from messages import BaseMessage, PingMessage
 from serial_port_handler import SerialRead, SerialWrite
 
@@ -69,9 +69,11 @@ class MainWindow(QtGui.QWidget):
 
     def init_gui(self):
         self.list_widget = MessageListWidget(self)
+        self.pingpong_widget = PingPongWidget(self.serial_writer_queue, self)
 
         layout = QVBoxLayout()
         layout.addWidget(self.list_widget)
+        layout.addWidget(self.pingpong_widget)
 
         self.setLayout(layout)
 
