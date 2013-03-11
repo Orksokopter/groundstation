@@ -8,7 +8,7 @@ from PyQt4.QtGui import QVBoxLayout
 import serial
 from serial.serialutil import SerialException
 from gui.serial_port_dialog import SerialPortDialog
-from gui.widgets import PingPongWidget, MessageListWidget
+from gui.widgets import PingPongWidget, MessageListWidget, ParametersWidget
 from messages import BaseMessage, PingMessage
 from serial_port_handler import SerialRead, SerialWrite
 
@@ -22,6 +22,8 @@ class MainWindow(QtGui.QWidget):
     serial_writer_queue = None
 
     list_widget = None
+    pingpong_widget = None
+    parameters_widget = None
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
@@ -81,10 +83,12 @@ class MainWindow(QtGui.QWidget):
     def init_gui(self):
         self.list_widget = MessageListWidget(self)
         self.pingpong_widget = PingPongWidget(self.serial_writer_queue, self)
+        self.parameters_widget = ParametersWidget(self)
 
         layout = QVBoxLayout()
         layout.addWidget(self.list_widget)
         layout.addWidget(self.pingpong_widget)
+        layout.addWidget(self.parameters_widget)
 
         self.setLayout(layout)
 
