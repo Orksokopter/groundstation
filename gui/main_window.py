@@ -9,7 +9,7 @@ import serial
 from serial.serialutil import SerialException
 from gui.serial_port_dialog import SerialPortDialog
 from gui.widgets import PingPongWidget, MessageListWidget
-from messages import BaseMessage, PingMessage
+from messages import BaseMessage, PingMessage, NopMessage, ClearToSendMessage
 from serial_port_handler import SerialRead, SerialWrite
 
 import gui.resources_rc
@@ -33,10 +33,16 @@ class MainWindow(QtGui.QWidget):
 
     @pyqtSlot(BaseMessage)
     def reader_received_message(self, message):
+        if isinstance(message, NopMessage) or isinstance(message, ClearToSendMessage):
+            return
+
         self.list_widget.addMessage('in', message)
 
     @pyqtSlot(BaseMessage)
     def writer_sent_message(self, message):
+        if isinstance(message, NopMessage) or isinstance(message, ClearToSendMessage):
+            return
+
         self.list_widget.addMessage('out', message)
 
     def initialize(self):
