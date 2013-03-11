@@ -3,6 +3,17 @@ from PyQt4 import QtGui
 from PyQt4.QtCore import QSettings
 from serial.tools import list_ports
 
+
+class QDataRadioButton(QtGui.QRadioButton):
+    __data = None
+
+    def setData(self, data):
+        self.__data = data
+
+    def data(self):
+        return self.__data
+
+
 class SerialPortDialog(QtGui.QDialog):
     serialport_combobox = None
     settings = None
@@ -15,18 +26,17 @@ class SerialPortDialog(QtGui.QDialog):
 
         label = QtGui.QLabel("Port wählen:")
 
+        self.serialport_buttongroup = QtGui.QButtonGroup()
+
         self.serialport_combobox = QtGui.QComboBox()
 
-        combolayout = QtGui.QHBoxLayout()
-        combolayout.addWidget(label)
-        combolayout.addStretch()
-        combolayout.addWidget(self.serialport_combobox)
+        radiobutton_layout = QtGui.QVBoxLayout()
 
         buttonbox = QtGui.QDialogButtonBox(self)
         buttonbox.setStandardButtons(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Close)
 
         layout = QtGui.QVBoxLayout()
-        layout.addLayout(combolayout)
+        layout.addLayout(radiobutton_layout)
         layout.addWidget(buttonbox)
 
         self.setLayout(layout)
@@ -39,17 +49,19 @@ class SerialPortDialog(QtGui.QDialog):
         self.serialport_combobox.clear()
         idx = 0
         for port in comports:
-            self.serialport_combobox.addItem(port[1], port[0])
+            curr_rb = QDataRadioButton(port[1])
+            curr_rb.setData(port[0])
+            radiobutton_layout.addWidget(curr_rb)
+            self.serialport_buttongroup.addButton(curr_rb)
 
             if port[0] == self.settings.value('last_selected_com_port'):
-                self.serialport_combobox.setCurrentIndex(idx)
+                curr_rb.setChecked(True)
 
             idx += 1
-        self.serialport_combobox.setFixedWidth(300)
 
     def accept(self):
         self.settings.setValue('last_selected_com_port', self.get_selected_serial_port())
         super(SerialPortDialog, self).accept()
 
     def get_selected_serial_port(self):
-        return self.serialport_combobox.itemData(self.serialport_combobox.currentIndex())
+        return self.serialport_buttongroup.checkedButton().data()
