@@ -6,6 +6,7 @@ from PyQt4 import QtGui, QtCore
 from PyQt4.QtCore import pyqtSlot
 from PyQt4.QtGui import QVBoxLayout
 import serial
+from serial.serialutil import SerialException
 from gui.serial_port_dialog import SerialPortDialog
 from gui.widgets import PingPongWidget, MessageListWidget
 from messages import BaseMessage, PingMessage
@@ -48,7 +49,17 @@ class MainWindow(QtGui.QWidget):
         selected_port = dlg.get_selected_serial_port()
         logging.debug('Selected port {}'.format(selected_port))
 
-        self.selected_serial_port = serial.Serial(selected_port, 57600)
+        try:
+            self.selected_serial_port = serial.Serial(selected_port, 57600)
+        except SerialException:
+            QtGui.QMessageBox.critical(
+                self,
+                'Error!',
+                'Could not connect to serial port {}'.format(selected_port)
+            )
+            QtCore.QTimer.singleShot(0, self.close)
+            return
+
         # This needs to be set so the threads may have a chance to abort
         self.selected_serial_port.timeout = 1
 
