@@ -97,6 +97,25 @@ class MainWindow(QtGui.QWidget):
 
         self.setLayout(layout)
 
+    def closeEvent(self, event):
+        if self.selected_serial_port and self.selected_serial_port.isOpen():
+            logger = logging.getLogger()
+
+            logger.debug("Aborting threads")
+            self.serial_reader.abort()
+            self.serial_writer.abort()
+
+            logger.debug("Waiting for threads to stop")
+            self.serial_reader.wait()
+            self.serial_writer.wait()
+
+            logger.debug("Closing serial port")
+            self.selected_serial_port.close()
+
+            logger.debug("Serial port closed")
+
+        event.accept()
+
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
 
