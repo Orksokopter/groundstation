@@ -57,11 +57,11 @@ class MainWindow(QtGui.QWidget):
 
         try:
             self.selected_serial_port = serial.Serial(selected_port, 57600)
-        except SerialException:
+        except SerialException as e:
             QtGui.QMessageBox.critical(
                 self,
                 'Error!',
-                'Could not connect to serial port {}'.format(selected_port)
+                'Could not connect to serial port {}<br><br>The error was: {}'.format(selected_port, e.strerror)
             )
             QtCore.QTimer.singleShot(0, self.close)
             return
