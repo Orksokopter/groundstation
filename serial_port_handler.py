@@ -131,7 +131,7 @@ class SerialWrite(QtCore.QThread):
     def remove_message_from_slots(self, message_number):
         with self.reset_send_buffer_lock:
             for index, slot in enumerate(self.message_buffer_slots):
-                if slot is not None and slot.message_number == message_number:
+                if slot is not None and slot.message_number() == message_number:
                     self.message_buffer_slots[index] = None
 
     def abort(self):
