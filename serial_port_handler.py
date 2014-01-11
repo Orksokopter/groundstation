@@ -95,8 +95,6 @@ class SerialRead(QtCore.QThread):
 
 
 class SerialWrite(QtCore.QThread):
-    MAX_SERIAL_SEND_BUFFER = 128
-
     sent_message = pyqtSignal(BaseMessage)
 
     def __init__(self, serial_port, queue):
