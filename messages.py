@@ -41,6 +41,7 @@ class MessageTypes:
     MSG_DO_GYRO_CALIBRATION = 0x00000e
     MSG_GYRO_CALIBRATION_DONE = 0x00000f
     MSG_DECIMAL_DEBUG_DUMP = 0x000010
+    MSG_REQUEST_CONFIRMATION = 0x000011
 
 
 class BaseMessage(object):
@@ -90,8 +91,8 @@ class BaseMessage(object):
 
         if msg_type == MessageTypes.MSG_PONG:
             msg = PongMessage.from_raw_data(data[3:-1])
-        elif msg_type == MessageTypes.MSG_CLEAR_TO_SEND:
-            msg = ClearToSendMessage.from_raw_data(data[3:-1])
+        elif msg_type == MessageTypes.MSG_REQUEST_CONFIRMATION:
+            msg = ConfirmationMessage.from_raw_data(data[3:-1])
         else:
             raise UnknownMessageType()
 
@@ -162,25 +163,21 @@ class PongMessage(BaseMessage):
         return msg
 
 
-class ClearToSendMessage(BaseMessage):
+class ConfirmationMessage(BaseMessage):
     def __init__(self):
-        super().__init__(MessageTypes.MSG_CLEAR_TO_SEND)
-        self.__last_message_number = None
-        self.__previous_last_message_number = None
+        super().__init__(MessageTypes.MSG_REQUEST_CONFIRMATION)
+        self.__confirmed_message_number = None
 
-    def last_message_number(self):
-        return self.__last_message_number
+    def confirmed_message_number(self):
+        return self.__confirmed_message_number
 
     def __str__(self):
-        return self._pretty_print("Last Message Number: {}, Previous Last Message Number: {}".format(
-            self.__last_message_number, self.__previous_last_message_number
-        ))
+        return self._pretty_print("Last Message Number: {}".format(self.__confirmed_message_number))
 
     @classmethod
     def from_raw_data(cls, data):
-        msg = ClearToSendMessage()
-        msg.__last_message_number = int.from_bytes(data[0:3], byteorder='big')
-        msg.__previous_last_message_number = int.from_bytes(data[3:6], byteorder='big')
+        msg = ConfirmationMessage()
+        msg.__confirmed_message_number = int.from_bytes(data[0:3], byteorder='big')
 
         return msg
 
@@ -215,3 +212,13 @@ class NopMessage(BaseMessage):
 
     def prepare_data(self):
         return b''
+
+
+class RequestConfirmationMessage(BaseMessage):
+    def __init__(self, message):
+        super().__init__(MessageTypes.MSG_REQUEST_CONFIRMATION)
+        self.message = message
+        self.set_message_number(0)
+
+    def prepare_data(self):
+        return self.message.message_type().to_bytes(3, byteorder='big')
