@@ -106,7 +106,7 @@ class SerialWrite(QtCore.QThread):
         QtCore.QThread.__init__(self)
         self.serial_port = serial_port
         self.queue = queue
-        self.current_message_number = 1
+        self.current_message_number = 0
         self.last_cleared_message_number = None
         self.__abort = False
 
