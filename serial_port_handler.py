@@ -23,6 +23,7 @@ from tools.getch import getch
 
 settings.init_logging()
 
+
 class SerialRead(QtCore.QThread):
     received_message = pyqtSignal(BaseMessage)
 
@@ -62,7 +63,7 @@ class SerialRead(QtCore.QThread):
             elif state == "in_message" and curr_char == ETB:
                 state = "after_message"
             elif state in ["after_escape", "in_message"]:
-                buffer+= curr_char
+                buffer += curr_char
 
                 if state == "after_escape":
                     state = "in_message"
@@ -82,10 +83,14 @@ class SerialRead(QtCore.QThread):
                         self.writer.reset_remaining_send_buffer(msg.last_message_number())
 
                 except MessageCRCError as e:
-                    logger.error('Message CRC mismatch... transmitted CRC: {}, computed CRC: {}'.format(e.transmitted_crc, e.computed_crc))
+                    logger.error('Message CRC mismatch... transmitted CRC: {}, computed CRC: {}'.format(
+                        e.transmitted_crc,
+                        e.computed_crc)
+                    )
                 except UnknownMessageType:
                     logger.warn('Unknown message {}'.format(binascii.hexlify(buffer)))
                 buffer = b""
+
 
 class SerialWrite(QtCore.QThread):
     MAX_SERIAL_SEND_BUFFER = 128
@@ -111,7 +116,10 @@ class SerialWrite(QtCore.QThread):
     def reset_remaining_send_buffer(self, cts_last_message_number):
         with self.reset_send_buffer_lock:
             if cts_last_message_number < self.current_message_number:
-                logging.debug("Not clearing buffer since msg num {} is lower than current msg num {}".format(cts_last_message_number, self.current_message_number))
+                logging.debug("Not clearing buffer since msg num {} is lower than current msg num {}".format(
+                    cts_last_message_number,
+                    self.current_message_number
+                ))
                 return
             logging.debug('Clearing remaining send buffer...')
             self.remaining_send_buffer = self.MAX_SERIAL_SEND_BUFFER
@@ -145,14 +153,14 @@ class SerialWrite(QtCore.QThread):
                 if self.__abort:
                     continue
 
-                self.current_message_number+= 1
+                self.current_message_number += 1
                 msg.set_message_number(self.current_message_number)
 
                 logger.debug("> {}...".format(msg))
 
                 encoded_message = msg.encode_for_writing()
 
-                self.remaining_send_buffer-= len(encoded_message)
+                self.remaining_send_buffer -= len(encoded_message)
                 self.serial_port.write(encoded_message)
                 self.serial_port.flush()
 
@@ -165,7 +173,7 @@ if __name__ == "__main__":
     app = QtCore.QCoreApplication(sys.argv)
 
     ser = serial.Serial(arguments['<device>'], 57600)
-    ser.timeout = 1 # This needs to be set so the threads may have a chance to abort
+    ser.timeout = 1  # This needs to be set so the threads may have a chance to abort
 
     writer_queue = Queue()
     sr = SerialRead(ser)

@@ -3,6 +3,7 @@ from PyQt4 import QtGui
 
 import gui.resources_rc
 
+
 class MessageListWidget(QtGui.QListWidget):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)

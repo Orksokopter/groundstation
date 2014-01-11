@@ -10,8 +10,8 @@ app = QtCore.QCoreApplication(sys.argv)
 qt_library_path = QtCore.QCoreApplication.libraryPaths()
 
 buildexe_options = {
-    'compressed' : True,
-    'optimize' : 2
+    'compressed': True,
+    'optimize': 2
 }
 
 imageformats_path = None
@@ -39,6 +39,6 @@ setup(
                    targetName='Bodenpython.exe' if sys.platform == "win32" else "bodenpython")
     ],
     options={
-        'build_exe' : buildexe_options
+        'build_exe': buildexe_options
     }
 )

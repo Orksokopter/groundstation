@@ -24,8 +24,6 @@ class SerialPortDialog(QtGui.QDialog):
         self.setWindowTitle('Seriellen Port wählen')
         self.setWindowIcon(QtGui.QIcon(':/icons/glyph-router'))
 
-        label = QtGui.QLabel("Port wählen:")
-
         self.serialport_combobox = QtGui.QComboBox()
         self.serialport_combobox.setEditable(True)
 

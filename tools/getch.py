@@ -9,6 +9,7 @@ screen."""
 
     def __call__(self): return self.impl()
 
+
 class _GetchUnix:
     def __init__(self):
         import sys, tty, termios
@@ -23,6 +24,7 @@ class _GetchUnix:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
+
 
 class _GetchWindows:
     def __init__(self):

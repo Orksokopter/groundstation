@@ -14,21 +14,23 @@ from serial_port_handler import SerialRead, SerialWrite
 
 import gui.resources_rc
 
+
 class MainWindow(QtGui.QWidget):
-    selected_serial_port = None
-
-    serial_reader = None
-    serial_writer = None
-    serial_writer_queue = None
-
-    list_widget = None
-
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
 
         self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
         QtGui.QApplication.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
         self.setWindowTitle('Mikrokopter Bodenpython')
+
+        self.selected_serial_port = None
+
+        self.serial_reader = None
+        self.serial_writer = None
+        self.serial_writer_queue = None
+
+        self.list_widget = None
+        self.pingpong_widget = None
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
