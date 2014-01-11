@@ -21,6 +21,7 @@ from queue import Queue, Empty
 import settings
 from PyQt4 import QtCore
 from tools.getch import getch
+import time
 
 settings.init_logging()
 
@@ -138,6 +139,9 @@ class SerialWrite(QtCore.QThread):
         self.__abort = True
 
     def run(self):
+        # Wait some time for the serial device because it can ignore data until it is fully booted up
+        time.sleep(1)
+
         logger = logging.getLogger()
         while not self.__abort:
             try:
