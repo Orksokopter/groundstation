@@ -118,7 +118,7 @@ class SerialWrite(QtCore.QThread):
     def has_empty_message_slot(self):
         for index, slot in enumerate(self.message_buffer_slots):
             if slot is None:
-                return index
+                return True
 
         return False
 
