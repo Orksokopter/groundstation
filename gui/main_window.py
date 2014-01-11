@@ -27,6 +27,7 @@ class MainWindow(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
 
         self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
+        QtGui.QApplication.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
         self.setWindowTitle('Mikrokopter Bodenpython')
 
         QtCore.QTimer.singleShot(0, self.initialize)
