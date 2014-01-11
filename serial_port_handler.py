@@ -126,6 +126,7 @@ class SerialWrite(QtCore.QThread):
         for index, slot in enumerate(self.message_buffer_slots):
             if slot is None:
                 self.message_buffer_slots[index] = message
+                break
 
     def remove_message_from_slots(self, message_number):
         with self.reset_send_buffer_lock:
