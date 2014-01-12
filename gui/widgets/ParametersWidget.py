@@ -5,6 +5,7 @@ from PyQt4.QtCore import pyqtSlot, pyqtSignal, Qt
 from PyQt4.QtGui import QLabel, QSpinBox, QHBoxLayout, QGroupBox, QVBoxLayout, qApp
 import uuid
 
+
 class Parameters:
     YAW_KP = 0x000000
     YAW_KI = 0x000001
@@ -276,7 +277,8 @@ class ParameterControlWidget(QtGui.QWidget):
         self.parameter_type_id = parameter_type
 
         self.spinbox = QSpinBox(self)
-        self.spinbox.setMinimum(-2147483648) #  Hier steht im Gegensatz zu C++ -2147483648 weil nicht: http://bit.ly/uflXkq
+        # Hier steht im Gegensatz zu C++ -2147483648 weil nicht: http://bit.ly/uflXkq
+        self.spinbox.setMinimum(-2147483648)
         self.spinbox.setMaximum(2147483647)
         self.spinbox.editingFinished.connect(self.someEditingFinished)
 
