@@ -9,7 +9,7 @@ import serial
 from serial.serialutil import SerialException
 from gui.serial_port_dialog import SerialPortDialog
 from gui.widgets import PingPongWidget, MessageListWidget
-from messages import BaseMessage, PingMessage, NopMessage, ClearToSendMessage
+from messages import BaseMessage, PingMessage, NopMessage, ConfirmationMessage
 from serial_port_handler import SerialRead, SerialWrite
 
 import gui.resources_rc
@@ -36,14 +36,14 @@ class MainWindow(QtGui.QWidget):
 
     @pyqtSlot(BaseMessage)
     def reader_received_message(self, message):
-        if isinstance(message, NopMessage) or isinstance(message, ClearToSendMessage):
+        if isinstance(message, NopMessage) or isinstance(message, ConfirmationMessage):
             return
 
         self.list_widget.addMessage('in', message)
 
     @pyqtSlot(BaseMessage)
     def writer_sent_message(self, message):
-        if isinstance(message, NopMessage) or isinstance(message, ClearToSendMessage):
+        if isinstance(message, NopMessage) or isinstance(message, ConfirmationMessage):
             return
 
         self.list_widget.addMessage('out', message)
@@ -96,6 +96,25 @@ class MainWindow(QtGui.QWidget):
         layout.addWidget(self.pingpong_widget)
 
         self.setLayout(layout)
+
+    def closeEvent(self, event):
+        if self.selected_serial_port and self.selected_serial_port.isOpen():
+            logger = logging.getLogger()
+
+            logger.debug("Aborting threads")
+            self.serial_reader.abort()
+            self.serial_writer.abort()
+
+            logger.debug("Waiting for threads to stop")
+            self.serial_reader.wait()
+            self.serial_writer.wait()
+
+            logger.debug("Closing serial port")
+            self.selected_serial_port.close()
+
+            logger.debug("Serial port closed")
+
+        event.accept()
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
