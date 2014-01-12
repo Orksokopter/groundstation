@@ -60,6 +60,6 @@ class SerialPortDialog(QtGui.QDialog):
         selected_item_data = self.serialport_combobox.itemData(self.serialport_combobox.currentIndex())
 
         if selected_item_data:
-            return selected_item_data.data()
+            return selected_item_data
         else:
             return self.serialport_combobox.currentText()
