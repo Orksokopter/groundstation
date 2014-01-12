@@ -15,13 +15,16 @@ from threading import Lock, Condition
 from PyQt4.QtCore import pyqtSignal
 import serial
 import sys
-from messages import STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ClearToSendMessage, NopMessage
+from messages import STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ConfirmationMessage, NopMessage, \
+    RequestConfirmationMessage
 from queue import Queue, Empty
 import settings
 from PyQt4 import QtCore
 from tools.getch import getch
+import time
 
 settings.init_logging()
+
 
 class SerialRead(QtCore.QThread):
     received_message = pyqtSignal(BaseMessage)
@@ -62,7 +65,7 @@ class SerialRead(QtCore.QThread):
             elif state == "in_message" and curr_char == ETB:
                 state = "after_message"
             elif state in ["after_escape", "in_message"]:
-                buffer+= curr_char
+                buffer += curr_char
 
                 if state == "after_escape":
                     state = "in_message"
@@ -78,18 +81,20 @@ class SerialRead(QtCore.QThread):
 
                     self.received_message.emit(msg)
 
-                    if isinstance(msg, ClearToSendMessage):
-                        self.writer.reset_remaining_send_buffer(msg.last_message_number())
+                    if isinstance(msg, ConfirmationMessage):
+                        self.writer.remove_message_from_slots(msg.confirmed_message_number())
 
                 except MessageCRCError as e:
-                    logger.error('Message CRC mismatch... transmitted CRC: {}, computed CRC: {}'.format(e.transmitted_crc, e.computed_crc))
+                    logger.error('Message CRC mismatch... transmitted CRC: {}, computed CRC: {}'.format(
+                        e.transmitted_crc,
+                        e.computed_crc)
+                    )
                 except UnknownMessageType:
                     logger.warn('Unknown message {}'.format(binascii.hexlify(buffer)))
                 buffer = b""
 
-class SerialWrite(QtCore.QThread):
-    MAX_SERIAL_SEND_BUFFER = 128
 
+class SerialWrite(QtCore.QThread):
     sent_message = pyqtSignal(BaseMessage)
 
     def __init__(self, serial_port, queue):
@@ -100,30 +105,41 @@ class SerialWrite(QtCore.QThread):
         QtCore.QThread.__init__(self)
         self.serial_port = serial_port
         self.queue = queue
-        self.current_message_number = 1
+        self.current_message_number = 0
         self.last_cleared_message_number = None
-        self.remaining_send_buffer = 0
         self.__abort = False
+
+        self.message_buffer_slots = [None] * 3
 
         self.reset_send_buffer_lock = Lock()
         self.full_buffer_wait_condition = Condition(self.reset_send_buffer_lock)
 
-    def reset_remaining_send_buffer(self, cts_last_message_number):
+    def has_empty_message_slot(self):
+        for index, slot in enumerate(self.message_buffer_slots):
+            if slot is None:
+                return True
+
+        return False
+
+    def put_message_in_free_slot(self, message):
+        for index, slot in enumerate(self.message_buffer_slots):
+            if slot is None:
+                self.message_buffer_slots[index] = message
+                break
+
+    def remove_message_from_slots(self, message_number):
         with self.reset_send_buffer_lock:
-            if cts_last_message_number < self.current_message_number:
-                logging.debug("Not clearing buffer since msg num {} is lower than current msg num {}".format(cts_last_message_number, self.current_message_number))
-                return
-            logging.debug('Clearing remaining send buffer...')
-            self.remaining_send_buffer = self.MAX_SERIAL_SEND_BUFFER
-            try:
-                self.full_buffer_wait_condition.notify()
-            except RuntimeError:
-                pass
+            for index, slot in enumerate(self.message_buffer_slots):
+                if slot is not None and slot.message_number() == message_number:
+                    self.message_buffer_slots[index] = None
 
     def abort(self):
         self.__abort = True
 
     def run(self):
+        # Wait some time for the serial device because it can ignore data until it is fully booted up
+        time.sleep(1)
+
         logger = logging.getLogger()
         while not self.__abort:
             try:
@@ -132,29 +148,34 @@ class SerialWrite(QtCore.QThread):
                 continue
 
             with self.reset_send_buffer_lock:
-                while not self.__abort and msg.encoded_message_length() > self.remaining_send_buffer:
-                    logger.debug('Send buffer full... waiting for ClearToSend')
+                while not self.__abort and not self.has_empty_message_slot():
+                    logger.debug('Send buffer full... waiting for message confirmations')
+
                     if not self.full_buffer_wait_condition.wait(1):
-                        nop = NopMessage()
-                        nop.set_message_number(self.current_message_number)
-                        self.serial_port.write(nop.encode_for_writing())
-                        self.sent_message.emit(nop)
-                        logger.debug('> {}'.format(nop))
+                        for msg in self.message_buffer_slots:
+                            if msg is None:
+                                continue
+
+                            request_confirmation = RequestConfirmationMessage(msg)
+                            self.serial_port.write(request_confirmation.encode_for_writing())
+                            self.sent_message.emit(request_confirmation)
+                            logger.debug('> {}'.format(request_confirmation))
 
                 # This thread may have been told to abort while waiting on the send buffer
                 if self.__abort:
                     continue
 
-                self.current_message_number+= 1
+                self.current_message_number += 1
                 msg.set_message_number(self.current_message_number)
 
                 logger.debug("> {}...".format(msg))
 
                 encoded_message = msg.encode_for_writing()
 
-                self.remaining_send_buffer-= len(encoded_message)
                 self.serial_port.write(encoded_message)
                 self.serial_port.flush()
+
+                self.put_message_in_free_slot(msg)
 
                 self.sent_message.emit(msg)
 
@@ -165,7 +186,7 @@ if __name__ == "__main__":
     app = QtCore.QCoreApplication(sys.argv)
 
     ser = serial.Serial(arguments['<device>'], 57600)
-    ser.timeout = 1 # This needs to be set so the threads may have a chance to abort
+    ser.timeout = 1  # This needs to be set so the threads may have a chance to abort
 
     writer_queue = Queue()
     sr = SerialRead(ser)

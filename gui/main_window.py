@@ -9,36 +9,45 @@ import serial
 from serial.serialutil import SerialException
 from gui.serial_port_dialog import SerialPortDialog
 from gui.widgets import PingPongWidget, MessageListWidget, ParametersWidget
-from messages import BaseMessage, PingMessage
+from messages import BaseMessage, PingMessage, NopMessage, ConfirmationMessage
 from serial_port_handler import SerialRead, SerialWrite
 
 import gui.resources_rc
 
+
 class MainWindow(QtGui.QWidget):
-    selected_serial_port = None
-
-    serial_reader = None
-    serial_writer = None
-    serial_writer_queue = None
-
-    list_widget = None
-    pingpong_widget = None
     parameters_widget = None
 
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
 
         self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
+        QtGui.QApplication.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
         self.setWindowTitle('Mikrokopter Bodenpython')
+
+        self.selected_serial_port = None
+
+        self.serial_reader = None
+        self.serial_writer = None
+        self.serial_writer_queue = None
+
+        self.list_widget = None
+        self.pingpong_widget = None
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
     @pyqtSlot(BaseMessage)
     def reader_received_message(self, message):
+        if isinstance(message, NopMessage) or isinstance(message, ConfirmationMessage):
+            return
+
         self.list_widget.addMessage('in', message)
 
     @pyqtSlot(BaseMessage)
     def writer_sent_message(self, message):
+        if isinstance(message, NopMessage) or isinstance(message, ConfirmationMessage):
+            return
+
         self.list_widget.addMessage('out', message)
 
     def initialize(self):
@@ -53,11 +62,11 @@ class MainWindow(QtGui.QWidget):
 
         try:
             self.selected_serial_port = serial.Serial(selected_port, 57600)
-        except SerialException:
+        except SerialException as e:
             QtGui.QMessageBox.critical(
                 self,
                 'Error!',
-                'Could not connect to serial port {}'.format(selected_port)
+                'Could not connect to serial port {}<br><br>The error was: {}'.format(selected_port, e.strerror)
             )
             QtCore.QTimer.singleShot(0, self.close)
             return
@@ -91,6 +100,25 @@ class MainWindow(QtGui.QWidget):
         layout.addWidget(self.parameters_widget)
 
         self.setLayout(layout)
+
+    def closeEvent(self, event):
+        if self.selected_serial_port and self.selected_serial_port.isOpen():
+            logger = logging.getLogger()
+
+            logger.debug("Aborting threads")
+            self.serial_reader.abort()
+            self.serial_writer.abort()
+
+            logger.debug("Waiting for threads to stop")
+            self.serial_reader.wait()
+            self.serial_writer.wait()
+
+            logger.debug("Closing serial port")
+            self.selected_serial_port.close()
+
+            logger.debug("Serial port closed")
+
+        event.accept()
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
