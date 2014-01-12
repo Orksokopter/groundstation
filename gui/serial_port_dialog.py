@@ -41,16 +41,19 @@ class SerialPortDialog(QtGui.QDialog):
         self.settings = QSettings('olle-orks.org', 'Bodenpython')
 
         comports = list_ports.comports()
-        self.serialport_combobox.clear()
-        idx = 0
-        for port in comports:
-            self.serialport_combobox.addItem(port[1], port[0])
+        if comports:
+            idx = 0
+            for port in comports:
+                self.serialport_combobox.addItem(port[1], port[0])
 
-            if port[0] == self.settings.value('last_selected_com_port'):
-                index = self.serialport_combobox.count() - 1
-                self.serialport_combobox.setCurrentIndex(index)
+                if port[0] == self.settings.value('last_selected_com_port'):
+                    index = self.serialport_combobox.count() - 1
+                    self.serialport_combobox.setCurrentIndex(index)
 
-            idx += 1
+                idx += 1
+        else:
+            if self.settings.value('last_selected_com_port'):
+                self.serialport_combobox.addItem(self.settings.value('last_selected_com_port'))
 
     def accept(self):
         self.settings.setValue('last_selected_com_port', self.get_selected_serial_port())
