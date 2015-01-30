@@ -1,10 +1,10 @@
 # coding=utf-8
-from PyQt4 import QtGui
-from PyQt4.QtCore import QSettings
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import QSettings
 from serial.tools import list_ports
 
 
-class QDataRadioButton(QtGui.QRadioButton):
+class QDataRadioButton(QtWidgets.QRadioButton):
     __data = None
 
     def setData(self, data):
@@ -14,23 +14,23 @@ class QDataRadioButton(QtGui.QRadioButton):
         return self.__data
 
 
-class SerialPortDialog(QtGui.QDialog):
+class SerialPortDialog(QtWidgets.QDialog):
     serialport_combobox = None
     settings = None
 
     def __init__(self, parent=None):
-        QtGui.QDialog.__init__(self, parent)
+        QtWidgets.QDialog.__init__(self, parent)
 
         self.setWindowTitle('Seriellen Port wählen')
         self.setWindowIcon(QtGui.QIcon(':/icons/glyph-router'))
 
-        self.serialport_combobox = QtGui.QComboBox()
+        self.serialport_combobox = QtWidgets.QComboBox()
         self.serialport_combobox.setEditable(True)
 
-        buttonbox = QtGui.QDialogButtonBox(self)
-        buttonbox.setStandardButtons(QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Close)
+        buttonbox = QtWidgets.QDialogButtonBox(self)
+        buttonbox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Close)
 
-        layout = QtGui.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.addWidget(self.serialport_combobox)
         layout.addWidget(buttonbox)
 

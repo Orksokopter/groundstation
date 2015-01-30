@@ -2,9 +2,9 @@
 import logging
 from queue import Queue
 import sys
-from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import pyqtSlot
-from PyQt4.QtGui import QVBoxLayout
+from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QVBoxLayout
 import serial
 from serial.serialutil import SerialException
 from gui.serial_port_dialog import SerialPortDialog
@@ -15,12 +15,12 @@ from serial_port_handler import SerialRead, SerialWrite
 import gui.resources_rc
 
 
-class MainWindow(QtGui.QWidget):
+class MainWindow(QtWidgets.QWidget):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
         self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
-        QtGui.QApplication.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
+        QtWidgets.QApplication.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
         self.setWindowTitle('Mikrokopter Bodenpython')
 
         self.selected_serial_port = None
@@ -51,7 +51,7 @@ class MainWindow(QtGui.QWidget):
     def initialize(self):
         dlg = SerialPortDialog()
 
-        if dlg.exec() == QtGui.QDialog.Rejected:
+        if dlg.exec() == QtWidgets.QDialog.Rejected:
             QtCore.QTimer.singleShot(0, self.close)
             return
 
@@ -61,7 +61,7 @@ class MainWindow(QtGui.QWidget):
         try:
             self.selected_serial_port = serial.Serial(selected_port, 57600)
         except SerialException as e:
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 'Error!',
                 'Could not connect to serial port {}<br><br>The error was: {}'.format(selected_port, e.strerror)
@@ -117,7 +117,7 @@ class MainWindow(QtGui.QWidget):
         event.accept()
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
 
     win = MainWindow()
     win.show()

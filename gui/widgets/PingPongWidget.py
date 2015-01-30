@@ -1,11 +1,11 @@
-from PyQt4 import QtGui
-from PyQt4.QtCore import pyqtSlot
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import pyqtSlot
 from messages import PingMessage, ProxyMessage
 
 import gui.resources_rc
 
 
-class PingPongWidget(QtGui.QWidget):
+class PingPongWidget(QtWidgets.QWidget):
     writer_queue = None
 
     def __init__(self, writer_queue, parent=None):

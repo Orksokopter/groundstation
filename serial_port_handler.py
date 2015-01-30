@@ -12,14 +12,14 @@ from docopt import docopt
 import binascii
 import logging
 from threading import Lock, Condition
-from PyQt4.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal
 import serial
 import sys
 from messages import STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ConfirmationMessage, NopMessage, \
     RequestConfirmationMessage
 from queue import Queue, Empty
 import settings
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 from tools.getch import getch
 import time
 
