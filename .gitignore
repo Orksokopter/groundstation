@@ -1,5 +1,6 @@
 # PyCharm / IntelliJ
 /.idea
+*.iml
 
 # Python
 __pycache__
@@ -7,3 +8,9 @@ __pycache__
 # cx_Freeze
 /build
 /imageformats
+
+# pyenv
+.python-version
+
+# application
+gui/resources_rc.py
