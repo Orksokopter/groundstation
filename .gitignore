@@ -1,5 +1,9 @@
+# PyCharm / IntelliJ
 /.idea
-/__pycache__
+
+# Python
 __pycache__
+
+# cx_Freeze
 /build
 /imageformats
