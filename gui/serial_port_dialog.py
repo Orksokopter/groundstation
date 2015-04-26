@@ -2,6 +2,8 @@
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QSettings
 from serial.tools import list_ports
+import sys
+import os
 
 
 class QDataRadioButton(QtWidgets.QRadioButton):
@@ -17,6 +19,8 @@ class QDataRadioButton(QtWidgets.QRadioButton):
 class SerialPortDialog(QtWidgets.QDialog):
     serialport_combobox = None
     settings = None
+
+    DARWIN_SERIAL_PORT_PATH = "/dev/tty.Orksokopter-DevB"
 
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
@@ -41,6 +45,11 @@ class SerialPortDialog(QtWidgets.QDialog):
         self.settings = QSettings('olle-orks.org', 'Bodenpython')
 
         comports = list_ports.comports()
+
+        if sys.platform.lower() == "darwin":
+            if os.path.exists(self.DARWIN_SERIAL_PORT_PATH):
+                comports.append((self.DARWIN_SERIAL_PORT_PATH, "Orksokopter-DevB"))
+
         if comports:
             idx = 0
             for port in comports:
