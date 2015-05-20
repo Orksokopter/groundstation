@@ -4,7 +4,7 @@ import shutil
 import sys
 from cx_Freeze import setup, Executable
 
-from PyQt4 import QtCore
+from PyQt5 import QtCore
 
 app = QtCore.QCoreApplication(sys.argv)
 qt_library_path = QtCore.QCoreApplication.libraryPaths()

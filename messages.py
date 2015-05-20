@@ -175,6 +175,9 @@ class ConfirmationMessage(BaseMessage):
     def __str__(self):
         return self._pretty_print("Message Number: {}".format(self.__confirmed_message_number))
 
+    def prepare_data(self):
+        return self.__confirmed_message_number.to_bytes(3, byteorder='big')
+
     @classmethod
     def from_raw_data(cls, data):
         msg = ConfirmationMessage()

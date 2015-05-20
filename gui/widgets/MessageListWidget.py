@@ -1,12 +1,12 @@
 from datetime import datetime
-from PyQt4 import QtGui
+from PyQt5 import QtGui, QtWidgets
 
 import gui.resources_rc
 
 
-class MessageListWidget(QtGui.QListWidget):
+class MessageListWidget(QtWidgets.QListWidget):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        QtWidgets.QWidget.__init__(self, parent)
 
     def addMessage(self, direction, msg):
         scroll_down = False
@@ -26,7 +26,7 @@ class MessageListWidget(QtGui.QListWidget):
         else:
             icon = QtGui.QIcon(':/icons/arrow-right')
 
-        self.addItem(QtGui.QListWidgetItem(icon, "{}: {}".format(datetime.now().isoformat(), msg)))
+        self.addItem(QtWidgets.QListWidgetItem(icon, "{}: {}".format(datetime.now().isoformat(), msg)))
 
         if scroll_down:
             self.scrollToBottom()
