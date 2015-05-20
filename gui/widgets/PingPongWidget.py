@@ -6,11 +6,11 @@ import gui.resources_rc
 
 
 class PingPongWidget(QtWidgets.QWidget):
-    writer_queue = None
+    communicator = None
 
-    def __init__(self, writer_queue, parent=None):
+    def __init__(self, communicator, parent=None):
         QtWidgets.QWidget.__init__(self, parent)
-        self.writer_queue = writer_queue
+        self.communicator = communicator
 
         ping_button = QtWidgets.QPushButton()
         ping_button.setText('Ping')
@@ -23,7 +23,7 @@ class PingPongWidget(QtWidgets.QWidget):
         proxy_ping_button.clicked.connect(self.proxy_ping_button_pushed)
 
         layout = QtWidgets.QHBoxLayout()
-        layout.setMargin(0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addStretch()
         layout.addWidget(ping_button)
         layout.addWidget(proxy_ping_button)
@@ -31,11 +31,10 @@ class PingPongWidget(QtWidgets.QWidget):
 
         self.setLayout(layout)
 
-
     @pyqtSlot()
     def proxy_ping_button_pushed(self):
-        self.writer_queue.put(ProxyMessage(PingMessage()))
+        self.communicator.send_message(ProxyMessage(PingMessage()))
 
     @pyqtSlot()
     def ping_button_pushed(self):
-        self.writer_queue.put(PingMessage())
+        self.communicator.send_message(PingMessage())

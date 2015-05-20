@@ -22,6 +22,8 @@ class SerialPortDialog(QtWidgets.QDialog):
 
     DARWIN_SERIAL_PORT_PATH = "/dev/tty.Orksokopter-DevB"
 
+    EMULATOR = "__EMULATOR__"
+
     def __init__(self, parent=None):
         QtWidgets.QDialog.__init__(self, parent)
 
@@ -50,19 +52,19 @@ class SerialPortDialog(QtWidgets.QDialog):
             if os.path.exists(self.DARWIN_SERIAL_PORT_PATH):
                 comports.append((self.DARWIN_SERIAL_PORT_PATH, "Orksokopter-DevB"))
 
+        comports.append((self.EMULATOR, "Emulator"))
+
         if comports:
-            idx = 0
             for port in comports:
                 self.serialport_combobox.addItem(port[1], port[0])
 
-                if port[0] == self.settings.value('last_selected_com_port'):
-                    index = self.serialport_combobox.count() - 1
-                    self.serialport_combobox.setCurrentIndex(index)
+        if self.settings.value('last_selected_com_port'):
+            index = self.serialport_combobox.findData(
+                self.settings.value('last_selected_com_port')
+            )
 
-                idx += 1
-        else:
-            if self.settings.value('last_selected_com_port'):
-                self.serialport_combobox.addItem(self.settings.value('last_selected_com_port'))
+            if index != -1:
+                self.serialport_combobox.setCurrentIndex(index)
 
     def accept(self):
         self.settings.setValue('last_selected_com_port', self.get_selected_serial_port())

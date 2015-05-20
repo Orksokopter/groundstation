@@ -8,20 +8,22 @@ Options:
   -h --help     Show this screen.
 
 """
-from docopt import docopt
 import binascii
 import logging
 from threading import Lock, Condition
+import sys
+from queue import Empty
+import time
+
+from docopt import docopt
 from PyQt5.QtCore import pyqtSignal
 import serial
-import sys
-from messages import STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ConfirmationMessage, NopMessage, \
-    RequestConfirmationMessage
-from queue import Queue, Empty
-import settings
 from PyQt5 import QtCore
-from tools.getch import getch
-import time
+
+from messages import STX, ETB, ESC, BaseMessage, UnknownMessageType, MessageCRCError, ConfirmationMessage, \
+    RequestConfirmationMessage
+from protocol.EmulatedCommunicator import EmulatedCommunicator
+import settings
 
 settings.init_logging()
 
@@ -182,19 +184,18 @@ class SerialWrite(QtCore.QThread):
 if __name__ == "__main__":
     arguments = docopt(__doc__, version='serial_port_handler')
 
-    from messages import PingMessage, ProxyMessage
+    from messages import PingMessage
+
     app = QtCore.QCoreApplication(sys.argv)
 
-    ser = serial.Serial(arguments['<device>'], 57600)
-    ser.timeout = 1  # This needs to be set so the threads may have a chance to abort
+    # Communicator exctraction todos:
+    # TODO Fix getch() issues
+    # TODO Allow selection of emulator or serial port
+    # TODO implement ProxyMessage
+    # TODO test SerialPortCommunicator
 
-    writer_queue = Queue()
-    sr = SerialRead(ser)
-    sw = SerialWrite(ser, writer_queue)
-    sr.connect_to_writer(sw)
-
-    sr.start()
-    sw.start()
+    #communicator = SerialPortCommunicator(arguments['<device>'])
+    communicator = EmulatedCommunicator()
 
     #logging.info("Press Enter to send a ping")
 
@@ -203,20 +204,14 @@ if __name__ == "__main__":
     #    #writer_queue.put(ProxyMessage(PingMessage()))
 
     for i in range(100):
-        writer_queue.put(PingMessage())
-        writer_queue.put(ProxyMessage(PingMessage()))
+        communicator.send_message(PingMessage())
+    #    communicator.send_message(ProxyMessage(PingMessage()))
 
     print("")
     print("")
     print("(STRG+c) or (q) to quit")
     print("")
 
-    char = None
-    while char is not b"\x03" and char is not b"q":
-        char = getch()
+    input("Test")
 
-    sr.abort()
-    sw.abort()
-
-    sr.wait()
-    sw.wait()
+    communicator.stop()

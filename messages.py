@@ -70,6 +70,17 @@ class BaseMessage(object):
         val += STX+STX+self.escape_bytes(msg_num)+self.escape_bytes(msg_type)+self.escape_bytes(data)+self.escape_bytes(crc)+ETB
         return val
 
+    # TODO Find a better name for this
+    def encode_for_writing_without_msg_num(self):
+        val = b''
+
+        msg_type = self.message_type().to_bytes(3, byteorder='big')
+        data = self.prepare_data()
+        crc = crc8.calc(msg_type+data).to_bytes(1, byteorder='big')
+
+        val += STX+STX+self.escape_bytes(msg_type)+self.escape_bytes(data)+self.escape_bytes(crc)+ETB
+        return val
+
     def encoded_message_length(self):
         return len(self.encode_for_writing())
 
@@ -171,6 +182,9 @@ class ConfirmationMessage(BaseMessage):
 
     def confirmed_message_number(self):
         return self.__confirmed_message_number
+
+    def set_confirmed_message_number(self, msg_num):
+        self.__confirmed_message_number = msg_num
 
     def __str__(self):
         return self._pretty_print("Message Number: {}".format(self.__confirmed_message_number))
