@@ -1,9 +1,12 @@
 from collections import OrderedDict
 import os
-from PyQt4 import QtGui, QtCore
-from PyQt4.QtCore import pyqtSlot, pyqtSignal, Qt
-from PyQt4.QtGui import QLabel, QSpinBox, QHBoxLayout, QGroupBox, QVBoxLayout, qApp
 import uuid
+
+from PyQt5 import QtCore
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, Qt
+from PyQt5.QtWidgets import QLabel, QSpinBox, QHBoxLayout, QGroupBox, \
+    QVBoxLayout, qApp, QWidget, QToolButton, QMenu, QPushButton, QMessageBox, \
+    QAction, QInputDialog
 
 
 class Parameters:
@@ -47,7 +50,7 @@ class Parameters:
         return OrderedDict(sorted(parameters_dict.items(), key=lambda t: t[1]))
 
 
-class ParametersWidget(QtGui.QWidget):
+class ParametersWidget(QWidget):
     writer_queue = None
     parameter_control_widgets = []
     dirty = False
@@ -96,18 +99,18 @@ class ParametersWidget(QtGui.QWidget):
         # Buttons
         ###
 
-        self.profile_button = QtGui.QToolButton()
+        self.profile_button = QToolButton()
         self.profile_button.setArrowType(Qt.DownArrow)
-        self.profile_button.setMenu(QtGui.QMenu())
-        self.profile_button.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
+        self.profile_button.setMenu(QMenu())
+        self.profile_button.setPopupMode(QToolButton.MenuButtonPopup)
         self.profile_button.setToolButtonStyle(Qt.ToolButtonTextOnly)
 
         self.profile_button.clicked.connect(self.save_profile)
         self.profile_button.triggered.connect(self.change_profile)
 
-        get_parameters_button = QtGui.QPushButton('Fetch parameters')
+        get_parameters_button = QPushButton('Fetch parameters')
         get_parameters_button.clicked.connect(self.fetch_parameters)
-        self.send_parameters_button = QtGui.QPushButton('Send parameters')
+        self.send_parameters_button = QPushButton('Send parameters')
         self.send_parameters_button.clicked.connect(self.send_parameters)
 
         button_layout = QHBoxLayout()
@@ -139,7 +142,7 @@ class ParametersWidget(QtGui.QWidget):
         # TODO
         return
 
-    @pyqtSlot(QtGui.QAction)
+    @pyqtSlot(QAction)
     def change_profile(self, action):
         """
         @type action: QtGui.QAction
@@ -150,17 +153,17 @@ class ParametersWidget(QtGui.QWidget):
             return
 
         if self.dirty:
-            msg_box = QtGui.QMessageBox()
+            msg_box = QMessageBox()
             msg_box.setText('The current profile has unsaved changes')
             msg_box.setInformativeText('Should the changes be saved in the current profile?')
-            msg_box.setStandardButtons(QtGui.QMessageBox.Save | QtGui.QMessageBox.Discard | QtGui.QMessageBox.Cancel)
-            msg_box.setDefaultButton(QtGui.QMessageBox.Save)
+            msg_box.setStandardButtons(QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
+            msg_box.setDefaultButton(QMessageBox.Save)
 
             r = msg_box.exec()
 
-            if r == QtGui.QMessageBox.Cancel:
+            if r == QMessageBox.Cancel:
                 return
-            elif r == QtGui.QMessageBox.Save:
+            elif r == QMessageBox.Save:
                 self.save_profile()
 
         self.active_profile = action
@@ -168,7 +171,7 @@ class ParametersWidget(QtGui.QWidget):
         self.set_dirty(False)
 
         if profile_uuid == 'new_profile':
-            text = QtGui.QInputDialog.getText(self, 'New profile', 'Name:')
+            text = QInputDialog.getText(self, 'New profile', 'Name:')
 
             if not text:
                 return
@@ -217,19 +220,19 @@ class ParametersWidget(QtGui.QWidget):
         menu = self.profile_button.menu()
         menu.clear()
 
-        read_only_action = QtGui.QAction('Read-only', menu)
+        read_only_action = QAction('Read-only', menu)
         read_only_action.setData('read_only')
         menu.addAction(read_only_action)
         menu.addSeparator()
 
         for le in self.settings.childGroups():
-            action = QtGui.QAction(self.settings.value(le + '/profileName')[0], menu)
+            action = QAction(self.settings.value(le + '/profileName')[0], menu)
             action.setData(le)
             menu.addAction(action)
 
         menu.addSeparator()
 
-        new_profile_action = QtGui.QAction("New profile", menu)
+        new_profile_action = QAction("New profile", menu)
         new_profile_action.setData('new_profile')
         menu.addAction(new_profile_action)
 
@@ -254,7 +257,7 @@ class ParametersWidget(QtGui.QWidget):
         else:
             self.profile_button.setText('Profile: ' + self.active_profile.text())
 
-    @pyqtSlot(QtGui.QWidget)
+    @pyqtSlot(QWidget)
     def parameter_changed(self, widget):
         if self.active_profile.data() == 'read_only':
             return
@@ -264,12 +267,12 @@ class ParametersWidget(QtGui.QWidget):
         self.set_dirty(True)
 
 
-class ParameterControlWidget(QtGui.QWidget):
+class ParameterControlWidget(QWidget):
     parameter_type_id = None
     parameter_type_name = None
     spinbox = None
 
-    editingFinished = pyqtSignal(QtGui.QWidget)
+    editingFinished = pyqtSignal(QWidget)
 
     def __init__(self, parameter_name, parameter_type, parent=None):
         super(ParameterControlWidget, self).__init__(parent)
