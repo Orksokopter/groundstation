@@ -52,3 +52,8 @@ class SerialPortCommunicator(BaseCommunicator):
         self.receiver = SerialPortReceiver(self.serial_port, self)
 
         super().__init__(QObject_parent)
+
+    def stop(self):
+        super().stop()
+
+        self.serial_port.close()
