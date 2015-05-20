@@ -23,7 +23,7 @@ class PingPongWidget(QtWidgets.QWidget):
         proxy_ping_button.clicked.connect(self.proxy_ping_button_pushed)
 
         layout = QtWidgets.QHBoxLayout()
-        layout.setMargin(0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addStretch()
         layout.addWidget(ping_button)
         layout.addWidget(proxy_ping_button)
