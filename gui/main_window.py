@@ -52,16 +52,19 @@ class MainWindow(QtWidgets.QWidget):
         selected_port = dlg.get_selected_serial_port()
         logging.debug('Selected port {}'.format(selected_port))
 
-        try:
-            self.communicator = SerialPortCommunicator(selected_port)
-        except SerialException as e:
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error!',
-                'Could not connect to serial port {}<br><br>The error was: {}'.format(selected_port, e.strerror)
-            )
-            QtCore.QTimer.singleShot(0, self.close)
-            return
+        if selected_port == dlg.EMULATOR:
+            self.communicator = EmulatedCommunicator()
+        else:
+            try:
+                self.communicator = SerialPortCommunicator(selected_port)
+            except SerialException as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    'Error!',
+                    'Could not connect to serial port {}<br><br>The error was: {}'.format(selected_port, e.strerror)
+                )
+                QtCore.QTimer.singleShot(0, self.close)
+                return
 
         self.communicator.received_message.connect(self.reader_received_message)
         self.communicator.sent_message.connect(self.writer_sent_message)
