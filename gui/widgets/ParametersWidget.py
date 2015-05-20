@@ -286,7 +286,7 @@ class ParameterControlWidget(QWidget):
         self.spinbox.editingFinished.connect(self.someEditingFinished)
 
         layout = QHBoxLayout()
-        layout.setMargin(0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(QLabel(parameter_name + ":"))
         layout.addWidget(self.spinbox)
 
