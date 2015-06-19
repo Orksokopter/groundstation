@@ -2,7 +2,7 @@ import logging
 import sys
 
 from PyQt5 import QtGui, QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSlot, QSettings
+from PyQt5.QtCore import pyqtSlot, QSettings, QTimer
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QSizePolicy
 
 from serial.serialutil import SerialException
@@ -12,6 +12,8 @@ from gui.widgets import PingPongWidget, MessageListWidget, ParametersWidget, \
 from messages import BaseMessage, PingMessage, NopMessage, ConfirmationMessage
 from protocol.EmulatedCommunicator import EmulatedCommunicator
 from protocol.SerialPortCommunicator import SerialPortCommunicator
+
+import gui.resources_rc
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -29,9 +31,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.list_widget = None
         self.pingpong_widget = None
         self.serialport_selector = None
-
-        self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
-        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
 
         saved_geometry = self.settings.value(self.SETTINGS_MAINWINDOW_GEOMETRY)
         if saved_geometry:
@@ -54,6 +53,13 @@ class MainWindow(QtWidgets.QMainWindow):
         central_widget.setLayout(central_layout)
 
         self.setCentralWidget(central_widget)
+
+        QTimer.singleShot(0, self.set_window_icon)
+
+    @pyqtSlot()
+    def set_window_icon(self):
+        self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
+        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
 
     @pyqtSlot(BaseMessage)
     def reader_received_message(self, message):

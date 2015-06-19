@@ -1,7 +1,6 @@
 from datetime import datetime
-from PyQt5 import QtGui, QtWidgets
 
-import gui.resources_rc
+from PyQt5 import QtGui, QtWidgets
 
 
 class MessageListWidget(QtWidgets.QListWidget):
