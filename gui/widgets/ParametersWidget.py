@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import QLabel, QSpinBox, QHBoxLayout, QGroupBox, \
     QVBoxLayout, qApp, QWidget, QToolButton, QMenu, QPushButton, QMessageBox, \
     QAction, QInputDialog
 
+from .HorizontalScrollArea import HorizontalScrollArea
+
 
 class Parameters:
     YAW_KP = 0x000000
@@ -68,7 +70,9 @@ class ParametersWidget(QWidget):
         # Parameter groups
         ###
 
-        group_widgets_layout = QHBoxLayout()
+        scroll_widget = QWidget()
+
+        group_widgets_layout = QHBoxLayout(scroll_widget)
         last_group = None
         curr_group_widget = None
         for param in Parameters.get_sorted_parameters():
@@ -123,8 +127,12 @@ class ParametersWidget(QWidget):
         # Main layout
         ###
 
+        scroll_area = HorizontalScrollArea()
+        scroll_area.setWidget(scroll_widget)
+
         main_layout = QVBoxLayout()
-        main_layout.addLayout(group_widgets_layout)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll_area)
         main_layout.addLayout(button_layout)
 
         self.setLayout(main_layout)
@@ -248,7 +256,6 @@ class ParametersWidget(QWidget):
             self.settings.endGroup()
             self.set_dirty(False)
 
-
     def set_dirty(self, dirty):
         self.dirty = dirty
 
@@ -261,6 +268,8 @@ class ParametersWidget(QWidget):
     def parameter_changed(self, widget):
         if self.active_profile.data() == 'read_only':
             return
+
+        print("Test")
 
         # TODO msg
 

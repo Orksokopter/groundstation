@@ -3,30 +3,31 @@ import sys
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QVBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout, QWidget
 from serial.serialutil import SerialException
 
-from gui.serial_port_dialog import SerialPortDialog
-from gui.widgets import PingPongWidget, MessageListWidget, ParametersWidget
+from gui.widgets import PingPongWidget, MessageListWidget, ParametersWidget, \
+    SerialPortSelector
 from messages import BaseMessage, PingMessage, NopMessage, ConfirmationMessage
 from protocol.EmulatedCommunicator import EmulatedCommunicator
 from protocol.SerialPortCommunicator import SerialPortCommunicator
 
 
-class MainWindow(QtWidgets.QWidget):
+class MainWindow(QtWidgets.QMainWindow):
     parameters_widget = None
 
-    def __init__(self, parent=None):
-        QtWidgets.QWidget.__init__(self, parent)
+    def __init__(self):
+        super().__init__()
 
-        self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
-        QtWidgets.QApplication.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
         self.setWindowTitle('Mikrokopter Bodenpython')
-
         self.communicator = None
-
         self.list_widget = None
         self.pingpong_widget = None
+
+        self.serialport_selector = SerialPortSelector()
+        self.setCentralWidget(self.serialport_selector)
+        self.serialport_selector.accepted.connect(self.serialport_selected)
+        self.serialport_selector.rejected.connect(self.close)
 
         QtCore.QTimer.singleShot(0, self.initialize)
 
@@ -44,17 +45,11 @@ class MainWindow(QtWidgets.QWidget):
 
         self.list_widget.addMessage('out', message)
 
-    def initialize(self):
-        dlg = SerialPortDialog()
-
-        if dlg.exec() == QtWidgets.QDialog.Rejected:
-            QtCore.QTimer.singleShot(0, self.close)
-            return
-
-        selected_port = dlg.get_selected_serial_port()
+    @pyqtSlot('QString')
+    def serialport_selected(self, selected_port):
         logging.debug('Selected port {}'.format(selected_port))
 
-        if selected_port == dlg.EMULATOR:
+        if selected_port == SerialPortSelector.EMULATOR:
             self.communicator = EmulatedCommunicator()
         else:
             try:
@@ -75,6 +70,12 @@ class MainWindow(QtWidgets.QWidget):
 
         self.init_gui()
 
+        del self.serialport_selector
+
+    def initialize(self):
+        self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
+        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
+
     def init_gui(self):
         self.list_widget = MessageListWidget(self)
         self.pingpong_widget = PingPongWidget(self.communicator, self)
@@ -85,7 +86,10 @@ class MainWindow(QtWidgets.QWidget):
         layout.addWidget(self.pingpong_widget)
         layout.addWidget(self.parameters_widget)
 
-        self.setLayout(layout)
+        widget = QWidget()
+        widget.setLayout(layout)
+
+        self.setCentralWidget(widget)
 
     def closeEvent(self, event):
         if self.communicator is not None:
@@ -101,5 +105,6 @@ if __name__ == "__main__":
 
     win = MainWindow()
     win.show()
+    win.raise_()
 
     sys.exit(app.exec_())

@@ -1,22 +1,13 @@
-# coding=utf-8
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import QSettings
-from serial.tools import list_ports
-import sys
 import os
+import sys
+
+from PyQt5.QtCore import QSettings, pyqtSignal
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QComboBox, QDialogButtonBox, QWidget, QVBoxLayout
+from serial.tools import list_ports
 
 
-class QDataRadioButton(QtWidgets.QRadioButton):
-    __data = None
-
-    def setData(self, data):
-        self.__data = data
-
-    def data(self):
-        return self.__data
-
-
-class SerialPortDialog(QtWidgets.QDialog):
+class SerialPortSelector(QWidget):
     serialport_combobox = None
     settings = None
 
@@ -24,19 +15,23 @@ class SerialPortDialog(QtWidgets.QDialog):
 
     EMULATOR = "__EMULATOR__"
 
+    accepted = pyqtSignal(['QString'])
+    rejected = pyqtSignal()
+
     def __init__(self, parent=None):
-        QtWidgets.QDialog.__init__(self, parent)
+        super().__init__(parent)
 
         self.setWindowTitle('Seriellen Port wählen')
-        self.setWindowIcon(QtGui.QIcon(':/icons/glyph-router'))
+        self.setWindowIcon(QIcon(':/icons/glyph-router'))
 
-        self.serialport_combobox = QtWidgets.QComboBox()
+        self.serialport_combobox = QComboBox()
         self.serialport_combobox.setEditable(True)
 
-        buttonbox = QtWidgets.QDialogButtonBox(self)
-        buttonbox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Close)
+        buttonbox = QDialogButtonBox(self)
+        buttonbox.setStandardButtons(QDialogButtonBox.Ok |
+                                     QDialogButtonBox.Close)
 
-        layout = QtWidgets.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.addWidget(self.serialport_combobox)
         layout.addWidget(buttonbox)
 
@@ -50,7 +45,8 @@ class SerialPortDialog(QtWidgets.QDialog):
 
         if sys.platform.lower() == "darwin":
             if os.path.exists(self.DARWIN_SERIAL_PORT_PATH):
-                comports.append((self.DARWIN_SERIAL_PORT_PATH, "Orksokopter-DevB"))
+                comports.append((self.DARWIN_SERIAL_PORT_PATH,
+                                 "Orksokopter-DevB"))
 
         comports.append((self.EMULATOR, "Emulator"))
 
@@ -67,11 +63,17 @@ class SerialPortDialog(QtWidgets.QDialog):
                 self.serialport_combobox.setCurrentIndex(index)
 
     def accept(self):
-        self.settings.setValue('last_selected_com_port', self.get_selected_serial_port())
-        super(SerialPortDialog, self).accept()
+        self.settings.setValue('last_selected_com_port',
+                               self.get_selected_serial_port())
+        self.accepted.emit(self.get_selected_serial_port())
+
+    def reject(self):
+        self.rejected.emit()
 
     def get_selected_serial_port(self):
-        selected_item_data = self.serialport_combobox.itemData(self.serialport_combobox.currentIndex())
+        selected_item_data = self.serialport_combobox.itemData(
+            self.serialport_combobox.currentIndex()
+        )
 
         if selected_item_data:
             return selected_item_data
