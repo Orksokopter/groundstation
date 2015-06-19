@@ -3,7 +3,7 @@ import sys
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot, QSettings
-from PyQt5.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout
+from PyQt5.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout, QSizePolicy
 
 from serial.serialutil import SerialException
 
@@ -100,6 +100,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.list_widget = MessageListWidget(self)
         self.pingpong_widget = PingPongWidget(self.communicator, self)
         self.parameters_widget = ParametersWidget(self)
+
+        size_policy = self.parameters_widget.sizePolicy()
+        size_policy.setVerticalPolicy(QSizePolicy.Fixed)
+        self.parameters_widget.setSizePolicy(size_policy)
 
         list_and_ping_layout = QHBoxLayout()
         list_and_ping_layout.addWidget(self.list_widget)
