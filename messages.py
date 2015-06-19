@@ -242,4 +242,4 @@ class RequestConfirmationMessage(BaseMessage):
         return self._pretty_print(self.message)
 
     def prepare_data(self):
-        return self.message.message_type().to_bytes(3, byteorder='big')
+        return self.message.message_number().to_bytes(3, byteorder='big')
