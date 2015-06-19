@@ -9,7 +9,8 @@ from serial.serialutil import SerialException
 
 from gui.widgets import PingPongWidget, MessageListWidget, ParametersWidget, \
     SerialPortSelector
-from messages import BaseMessage, PingMessage, NopMessage, ConfirmationMessage
+from messages import BaseMessage, PingMessage, NopMessage, ConfirmationMessage, \
+    CurParameterMessage
 from protocol.EmulatedCommunicator import EmulatedCommunicator
 from protocol.SerialPortCommunicator import SerialPortCommunicator
 
@@ -66,6 +67,10 @@ class MainWindow(QtWidgets.QMainWindow):
         if isinstance(message, NopMessage) or isinstance(message, ConfirmationMessage):
             return
 
+        if isinstance(message, CurParameterMessage):
+            self.parameters_widget.update_parameter(message.parameter,
+                                                    message.parameter_value)
+
         self.list_widget.addMessage('in', message)
 
     @pyqtSlot(BaseMessage)
@@ -105,7 +110,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def init_gui(self):
         self.list_widget = MessageListWidget(self)
         self.pingpong_widget = PingPongWidget(self.communicator, self)
-        self.parameters_widget = ParametersWidget(self)
+        self.parameters_widget = ParametersWidget(self.communicator, self)
 
         size_policy = self.parameters_widget.sizePolicy()
         size_policy.setVerticalPolicy(QSizePolicy.Fixed)

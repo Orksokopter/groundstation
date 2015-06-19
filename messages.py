@@ -105,6 +105,8 @@ class BaseMessage(object):
             msg = PongMessage.from_raw_data(data[3:-1])
         elif msg_type == MessageTypes.MSG_CONFIRMATION:
             msg = ConfirmationMessage.from_raw_data(data[3:-1])
+        elif msg_type == MessageTypes.MSG_CUR_PARAMETER:
+            msg = CurParameterMessage.from_raw_data(data[3:-1])
         else:
             raise UnknownMessageType()
 
@@ -171,6 +173,50 @@ class PongMessage(BaseMessage):
     def from_raw_data(cls, data):
         msg = PongMessage()
         msg.sequence_number = int.from_bytes(data, byteorder='big')
+
+        return msg
+
+
+class GetParameterMessage(BaseMessage):
+    def __init__(self):
+        super().__init__(MessageTypes.MSG_GET_PARAMETER)
+        self.parameter = None
+
+    def __str__(self):
+        return self._pretty_print('Parameter: {}'.format(self.parameter))
+
+    def prepare_data(self):
+        return self.parameter.to_bytes(2, byteorder="big")
+
+    @classmethod
+    def from_raw_data(cls, data):
+        msg = GetParameterMessage()
+        msg.parameter = int.from_bytes(data, byteorder='big')
+
+        return msg
+
+
+class CurParameterMessage(BaseMessage):
+    def __init__(self):
+        super().__init__(MessageTypes.MSG_CUR_PARAMETER)
+        self.parameter = None
+        self.parameter_value = None
+
+    def __str__(self):
+        return self._pretty_print('Parameter: {}, Value: {}'.format(
+            self.parameter,
+            self.parameter_value
+        ))
+
+    def prepare_data(self):
+        return self.parameter.to_bytes(2, byteorder="big") + \
+            self.parameter_value.to_bytes(4, byteorder="big")
+
+    @classmethod
+    def from_raw_data(cls, data):
+        msg = CurParameterMessage()
+        msg.parameter = int.from_bytes(data[0:2], byteorder='big')
+        msg.parameter_value = int.from_bytes(data[2:6], byteorder='big')
 
         return msg
 

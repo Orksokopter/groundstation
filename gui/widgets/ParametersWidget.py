@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QLabel, QSpinBox, QHBoxLayout, QGroupBox, \
     QAction, QInputDialog
 
 from .HorizontalScrollArea import HorizontalScrollArea
+from messages import GetParameterMessage, ProxyMessage
 
 
 class Parameters:
@@ -41,6 +42,15 @@ class Parameters:
     SPECIAL_BATT_VOLTAGE = 0x00001a
 
     @classmethod
+    def list(cls):
+        parameters_list = []
+        for param in dir(cls):
+            if not isinstance(getattr(cls, param), int):
+                continue
+            parameters_list.append((param, getattr(cls, param)))
+        return parameters_list
+
+    @classmethod
     def get_sorted_parameters(cls):
         parameters_dict = {}
         for param in dir(cls):
@@ -53,13 +63,13 @@ class Parameters:
 
 
 class ParametersWidget(QWidget):
-    writer_queue = None
+    communicator = None
     parameter_control_widgets = []
     dirty = False
 
-    def __init__(self, writer_queue, parent=None):
+    def __init__(self, communicator, parent=None):
         super(ParametersWidget, self).__init__(parent)
-        self.writer_queue = writer_queue
+        self.communicator = communicator
 
         self.settings = QtCore.QSettings(
             os.path.join(qApp.applicationDirPath(), 'parameter_profiles.ini'),
@@ -148,8 +158,12 @@ class ParametersWidget(QWidget):
 
     @pyqtSlot()
     def fetch_parameters(self):
-        # TODO
-        return
+        # TODO block UI
+
+        for param, id in Parameters.list():
+            msg = GetParameterMessage()
+            msg.parameter = id
+            self.communicator.send_message(ProxyMessage(msg))
 
     @pyqtSlot()
     def send_parameters(self):
@@ -280,6 +294,12 @@ class ParametersWidget(QWidget):
         # TODO msg
 
         self.set_dirty(True)
+
+    def update_parameter(self, parameter, parameter_value):
+        for widget in self.parameter_control_widgets:
+            if widget.parameter_type_id == parameter:
+                widget.setValue(parameter_value)
+                break
 
 
 class ParameterControlWidget(QWidget):

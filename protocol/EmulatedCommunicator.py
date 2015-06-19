@@ -1,6 +1,7 @@
 from queue import Queue, Empty
 
-from messages import ConfirmationMessage, PingMessage, PongMessage
+from messages import ConfirmationMessage, PingMessage, PongMessage, \
+    GetParameterMessage, CurParameterMessage
 from protocol.BaseCommunicator import BaseCommunicator
 from protocol.BaseReceiver import BaseReceiver
 from protocol.BaseSender import BaseSender
@@ -39,6 +40,11 @@ class EmulatedSender(BaseSender):
             pong = PongMessage()
             pong.sequence_number = message.sequence_number
             self.put_message_in_receiver_queue(pong)
+        if isinstance(message, GetParameterMessage):
+            cur = CurParameterMessage()
+            cur.parameter = message.parameter
+            cur.parameter_value = 100
+            self.put_message_in_receiver_queue(cur)
 
     def put_message_in_receiver_queue(self, message):
         encoded_msg = message.encode_for_writing_without_msg_num()
