@@ -1,7 +1,7 @@
 from queue import Queue, Empty
 
 from messages import ConfirmationMessage, PingMessage, PongMessage, \
-    GetParameterMessage, CurParameterMessage
+    GetParameterMessage, CurParameterMessage, ProxyMessage
 from protocol.BaseCommunicator import BaseCommunicator
 from protocol.BaseReceiver import BaseReceiver
 from protocol.BaseSender import BaseSender
@@ -35,6 +35,9 @@ class EmulatedSender(BaseSender):
         confirmation_msg = ConfirmationMessage()
         confirmation_msg.set_confirmed_message_number(message.message_number())
         self.put_message_in_receiver_queue(confirmation_msg)
+
+        if isinstance(message, ProxyMessage):
+            message = message.inner_message
 
         if isinstance(message, PingMessage):
             pong = PongMessage()
