@@ -2,7 +2,7 @@ import logging
 import sys
 
 from PyQt5 import QtGui, QtCore, QtWidgets
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtCore import pyqtSlot, QSettings
 from PyQt5.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout
 
 from serial.serialutil import SerialException
@@ -17,20 +17,43 @@ from protocol.SerialPortCommunicator import SerialPortCommunicator
 class MainWindow(QtWidgets.QMainWindow):
     parameters_widget = None
 
+    SETTINGS_MAINWINDOW_GEOMETRY = "main_window_geometry"
+
     def __init__(self):
         super().__init__()
+
+        self.settings = QSettings('olle-orks.org', 'Bodenpython')
 
         self.setWindowTitle('Mikrokopter Bodenpython')
         self.communicator = None
         self.list_widget = None
         self.pingpong_widget = None
+        self.serialport_selector = None
 
-        self.serialport_selector = SerialPortSelector()
-        self.setCentralWidget(self.serialport_selector)
+        self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
+        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
+
+        saved_geometry = self.settings.value(self.SETTINGS_MAINWINDOW_GEOMETRY)
+        if saved_geometry:
+            self.restoreGeometry(saved_geometry)
+
+        self.serialport_selector = SerialPortSelector(self.settings)
         self.serialport_selector.accepted.connect(self.serialport_selected)
         self.serialport_selector.rejected.connect(self.close)
 
-        QtCore.QTimer.singleShot(0, self.initialize)
+        selector_layout = QHBoxLayout()
+        selector_layout.addStretch()
+        selector_layout.addWidget(self.serialport_selector)
+        selector_layout.addStretch()
+
+        central_widget = QWidget()
+        central_layout = QVBoxLayout()
+        central_layout.addStretch()
+        central_layout.addLayout(selector_layout)
+        central_layout.addStretch()
+        central_widget.setLayout(central_layout)
+
+        self.setCentralWidget(central_widget)
 
     @pyqtSlot(BaseMessage)
     def reader_received_message(self, message):
@@ -73,10 +96,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         del self.serialport_selector
 
-    def initialize(self):
-        self.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
-        QtWidgets.qApp.setWindowIcon(QtGui.QIcon(':/icons/app-icon'))
-
     def init_gui(self):
         self.list_widget = MessageListWidget(self)
         self.pingpong_widget = PingPongWidget(self.communicator, self)
@@ -102,7 +121,10 @@ class MainWindow(QtWidgets.QMainWindow):
             logger.debug("Stopping communicator")
             self.communicator.stop()
 
-        event.accept()
+        self.settings.setValue(self.SETTINGS_MAINWINDOW_GEOMETRY,
+                               self.saveGeometry())
+
+        super().closeEvent(event)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)

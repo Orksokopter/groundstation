@@ -18,7 +18,7 @@ class SerialPortSelector(QWidget):
     accepted = pyqtSignal(['QString'])
     rejected = pyqtSignal()
 
-    def __init__(self, parent=None):
+    def __init__(self, settings, parent=None):
         super().__init__(parent)
 
         self.setWindowTitle('Seriellen Port wählen')
@@ -39,7 +39,7 @@ class SerialPortSelector(QWidget):
         buttonbox.rejected.connect(self.reject)
         buttonbox.accepted.connect(self.accept)
 
-        self.settings = QSettings('olle-orks.org', 'Bodenpython')
+        self.settings = settings
 
         comports = list(list_ports.comports())
 
