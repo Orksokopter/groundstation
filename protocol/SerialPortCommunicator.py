@@ -48,8 +48,8 @@ class SerialPortCommunicator(BaseCommunicator):
         # This needs to be set so the threads may have a chance to abort
         self.serial_port.timeout = 1
 
-        self.sender = SerialPortSender(self.serial_port, self)
-        self.receiver = SerialPortReceiver(self.serial_port, self)
+        self.sender = SerialPortSender(self.serial_port, QObject_parent)
+        self.receiver = SerialPortReceiver(self.serial_port, QObject_parent)
 
         super().__init__(QObject_parent)
 
