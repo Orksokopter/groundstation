@@ -3,7 +3,8 @@ import sys
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSlot
-from PyQt5.QtWidgets import QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QVBoxLayout, QWidget, QHBoxLayout
+
 from serial.serialutil import SerialException
 
 from gui.widgets import PingPongWidget, MessageListWidget, ParametersWidget, \
@@ -81,9 +82,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pingpong_widget = PingPongWidget(self.communicator, self)
         self.parameters_widget = ParametersWidget(self)
 
+        list_and_ping_layout = QHBoxLayout()
+        list_and_ping_layout.addWidget(self.list_widget)
+        list_and_ping_layout.addWidget(self.pingpong_widget)
+
         layout = QVBoxLayout()
-        layout.addWidget(self.list_widget)
-        layout.addWidget(self.pingpong_widget)
+        layout.addLayout(list_and_ping_layout)
         layout.addWidget(self.parameters_widget)
 
         widget = QWidget()

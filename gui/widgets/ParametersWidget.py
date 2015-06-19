@@ -87,13 +87,19 @@ class ParametersWidget(QWidget):
                 last_group = group
 
                 curr_group_widget = QGroupBox(group)
-                curr_group_widget.setLayout(QVBoxLayout())
+
+                group_layout = QVBoxLayout()
+
+                curr_group_widget.setLayout(group_layout)
+                group_layout.setContentsMargins(5, 5, 5, 5)
+                group_layout.setSpacing(3)
 
                 group_widgets_layout.addWidget(curr_group_widget)
 
             param_widget = ParameterControlWidget(param_name, getattr(Parameters, param))
             param_widget.setParameterTypeName(param)
             param_widget.editingFinished.connect(self.parameter_changed)
+            #param_widget.setContentsMargins(0, 0, 0, 0)
             curr_group_widget.layout().addWidget(param_widget)
             self.parameter_control_widgets.append(param_widget)
         curr_group_widget.layout().addStretch()
@@ -293,6 +299,7 @@ class ParameterControlWidget(QWidget):
         self.spinbox.setMinimum(-2147483648)
         self.spinbox.setMaximum(2147483647)
         self.spinbox.editingFinished.connect(self.someEditingFinished)
+        self.spinbox.setFixedWidth(80)
 
         layout = QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
