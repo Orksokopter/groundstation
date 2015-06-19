@@ -41,7 +41,7 @@ class SerialPortSelector(QWidget):
 
         self.settings = QSettings('olle-orks.org', 'Bodenpython')
 
-        comports = list_ports.comports()
+        comports = list(list_ports.comports())
 
         if sys.platform.lower() == "darwin":
             if os.path.exists(self.DARWIN_SERIAL_PORT_PATH):
