@@ -1,8 +1,7 @@
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSlot
-from messages import PingMessage, ProxyMessage
 
-import gui.resources_rc
+from messages import PingMessage, ProxyMessage
 
 
 class PingPongWidget(QtWidgets.QWidget):
@@ -22,9 +21,8 @@ class PingPongWidget(QtWidgets.QWidget):
         proxy_ping_button.setIcon(QtGui.QIcon(':/icons/pong'))
         proxy_ping_button.clicked.connect(self.proxy_ping_button_pushed)
 
-        layout = QtWidgets.QHBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addStretch()
         layout.addWidget(ping_button)
         layout.addWidget(proxy_ping_button)
         layout.addStretch()
